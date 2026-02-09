@@ -17,6 +17,7 @@ const cards = [
 
 export default function CardStack() {
   const cardsRef = useRef<HTMLDivElement[]>([]);
+  const mounted = useRef(false);
   const centerIndex = (cards.length - 1) / 2;
 
   const spacing = 180;
@@ -24,23 +25,52 @@ export default function CardStack() {
   const rotateDeg = 8;
 
   useEffect(() => {
+    mounted.current = true;
+
     const ctx = gsap.context(() => {
-      gsap.to(cardsRef.current, {
-        x: (i) => (i - centerIndex) * spacing,
-        y: (i) => Math.abs(i - centerIndex) * curveDepth,
-        rotate: (i) => (i - centerIndex) * rotateDeg,
-        ease: "none",
-        scrollTrigger: {
-          trigger: ".stack",
-          start: "top top",
-          end: "+=600",
-          scrub: true,
-          pin: true,
-        },
+      // Start stacked on load
+      gsap.set(cardsRef.current, {
+        x: 0,
+        y: 0,
+        rotate: 0,
       });
+
+      // Spread after 3 seconds, then allow scroll to bring them back to stacked
+      gsap.delayedCall(1, () => {
+        if (!mounted.current) return;
+
+        gsap.to(cardsRef.current, {
+          x: (i) => (i - centerIndex) * spacing,
+          y: (i) => Math.abs(i - centerIndex) * curveDepth,
+          rotate: (i) => (i - centerIndex) * rotateDeg,
+          duration: 0.8,
+          ease: "power2.out",
+          onComplete: () => {
+            if (!mounted.current) return;
+
+            gsap.to(cardsRef.current, {
+              x: 0,
+              y: 0,
+              rotate: 0,
+              ease: "none",
+              scrollTrigger: {
+                trigger: ".stack",
+                start: "top top",
+                end: "+=600",
+                scrub: true,
+                pin: true,
+              },
+            });
+          },
+        });
+      });
+
     });
 
-    return () => ctx.revert();
+    return () => {
+      mounted.current = false;
+      ctx.revert();
+    };
   }, []);
 
   return (
