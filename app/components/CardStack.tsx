@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useLayoutEffect } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
@@ -24,44 +24,58 @@ export default function CardStack() {
   const curveDepth = 60;
   const rotateDeg = 8;
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     mounted.current = true;
 
     const ctx = gsap.context(() => {
-      // Start stacked on load
+      // Drop in from below, then fan open
+      const spreadState = {
+        x: (i: number) => (i - centerIndex) * spacing,
+        y: (i: number) => Math.abs(i - centerIndex) * curveDepth,
+        rotate: (i: number) => (i - centerIndex) * rotateDeg,
+        opacity: 1,
+      };
+
       gsap.set(cardsRef.current, {
         x: 0,
-        y: 0,
+        y: 240,
         rotate: 0,
+        opacity: 0,
+        transformOrigin: "50% 100%",
       });
 
-      // Spread after 3 seconds, then allow scroll to bring them back to stacked
-      gsap.delayedCall(1, () => {
-        if (!mounted.current) return;
+      const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
 
-        gsap.to(cardsRef.current, {
-          x: (i) => (i - centerIndex) * spacing,
-          y: (i) => Math.abs(i - centerIndex) * curveDepth,
-          rotate: (i) => (i - centerIndex) * rotateDeg,
+      tl.to(cardsRef.current, {
+        y: 0,
+        opacity: 1,
+        duration: 0.9,
+        stagger: 0.06,
+      }).to(
+        cardsRef.current,
+        {
+          ...spreadState,
           duration: 0.8,
           ease: "power2.out",
-          onComplete: () => {
-            if (!mounted.current) return;
+        },
+        "-=0.25",
+      );
 
-            gsap.to(cardsRef.current, {
-              x: 0,
-              y: 0,
-              rotate: 0,
-              ease: "none",
-              scrollTrigger: {
-                trigger: ".stack",
-                start: "top top",
-                end: "+=600",
-                scrub: true,
-                pin: true,
-              },
-            });
-          },
+      tl.call(() => {
+        if (!mounted.current) return;
+
+        ScrollTrigger.create({
+          trigger: ".stack",
+          start: "top top",
+          end: "+=600",
+          scrub: true,
+          pin: true,
+          animation: gsap.to(cardsRef.current, {
+            x: 0,
+            y: 0,
+            rotate: 0,
+            ease: "none",
+          }),
         });
       });
 
@@ -83,13 +97,17 @@ export default function CardStack() {
             ref={(el) => {
               if (el) cardsRef.current[i] = el;
             }}
-            className="absolute w-64 h-72 rounded-2xl shadow-2xl"
+            className="absolute w-64 h-72 rounded-2xl shadow-2xl stack-card"
             style={{
               backgroundColor: card.color,
               backgroundImage: `url(${card.bg})`,
               backgroundRepeat: "no-repeat",
               backgroundPosition: "center",
               backgroundSize: "90px",
+              // Match GSAP's starting state to avoid an initial flash
+              opacity: 0,
+              transform: "translate3d(0, 240px, 0) rotate(0deg)",
+              transformOrigin: "50% 100%",
 
               // rightmost card on top
               zIndex: i + 1,
