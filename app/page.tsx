@@ -11,24 +11,18 @@ export default function Home() {
         {/* CENTERED GROUP */}
         <div className="w-full flex flex-col items-center text-center">
           {/* NAME / HERO */}
-          <p className="text-sm tracking-widest text-gray-500 mt-2">
-            HYDERABAD
-          </p>
-          <p className="text-sm tracking-widest text-gray-500 mt-2">
-            labhishettysaikalyan@gmail.com
-          </p>
 
-          <h1 className="mt-8 text-6xl md:text-7xl font-light leading-tight">
+          <h1 className="mt-8 text-8xl md:text87xl font-bold leading-tight">
             <span className="block">SAI KALYAN</span>
             <span className="block">LABHISHETTY</span>
           </h1>
 
-          <p className="mt-4 text-sm tracking-widest text-gray-500 uppercase">
+          <p className="mt-4 text-md tracking-widest text-gray-500 font-bold uppercase">
             3 Years of crafting innovative projects
           </p>
 
           {/* SPACE BETWEEN NAME AND CARDS */}
-          <div className="mt-20 w-full">
+          <div className="w-full">
             <CardStack />
           </div>
 

@@ -8,7 +8,7 @@ gsap.registerPlugin(ScrollTrigger);
 
 const cards = [
   { name: "React", bg: "/react.svg", color: "#20232a" },
-  { name: "Next.js", bg: "/next.svg", color: "#000000" },
+  { name: "Next.js", bg: "/next.svg", color: "#7c7c7cff" },
   { name: "FastAPI", bg: "/fastapi.svg", color: "#0f766e" },
   { name: "Python", bg: "/python.svg", color: "#1e3a8a" },
   { name: "MongoDB", bg: "/mongodb.svg", color: "#166534" },
