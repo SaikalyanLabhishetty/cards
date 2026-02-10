@@ -1,8 +1,6 @@
 "use client";
 
 import CardStack from "./components/CardStack";
-import FeaturedWork from "./components/FeatureWork";
-import TransitionStack from "./components/TransitionStack";
 
 export default function Home() {
   return (
@@ -53,13 +51,6 @@ export default function Home() {
             <div className="w-full md:w-1/2" />
           </section>
 
-          <div className="mt-4 w-full">
-            <FeaturedWork />
-          </div>
-
-          {/* <div className="mt-4 w-full">
-            <TransitionStack />
-          </div> */}
         </div>
       </section>
     </main>
