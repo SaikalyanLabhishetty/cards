@@ -67,7 +67,7 @@ export default function CardStack() {
         ScrollTrigger.create({
           trigger: ".stack",
           start: "top top",
-          end: "+=600",
+          end: "+=400",
           scrub: true,
           pin: true,
           animation: gsap.to(cardsRef.current, {
@@ -88,8 +88,8 @@ export default function CardStack() {
   }, []);
 
   return (
-    <section className="stack min-h-screen bg-black">
-      <div className="relative w-full flex justify-center pt-24">
+    <section className="stack min-h-[80vh] bg-black">
+      <div className="relative w-full flex justify-center pt-12">
         {/* pt-24 controls how far from top the cards sit */}
         {cards.map((card, i) => (
           <div
