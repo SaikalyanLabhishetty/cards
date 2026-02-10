@@ -88,7 +88,7 @@ export default function CardStack() {
   }, []);
 
   return (
-    <section className="stack min-h-screen bg-white">
+    <section className="stack min-h-screen bg-black">
       <div className="relative w-full flex justify-center pt-24">
         {/* pt-24 controls how far from top the cards sit */}
         {cards.map((card, i) => (
