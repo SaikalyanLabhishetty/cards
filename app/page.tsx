@@ -4,6 +4,9 @@ import { useEffect, useState } from "react";
 
 import CardStack from "./components/CardStack";
 import About from "./components/about";
+import FeatureProject from "./components/featureProject";
+import Connected from "./components/connected";
+// import FeatureWork from "./components/featureWork";
 
 export default function Home() {
   const subtitle = "3 Years of crafting innovative projects";
@@ -51,6 +54,9 @@ export default function Home() {
         </div>
       </section>
       <About />
+      <FeatureProject />
+      {/* <FeatureWork /> */}
+      <Connected />
     </main>
   );
 }
