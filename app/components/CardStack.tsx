@@ -7,12 +7,12 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 gsap.registerPlugin(ScrollTrigger);
 
 const cards = [
-  { name: "React", bg: "/react.svg", color: "#20232a" },
-  { name: "Next.js", bg: "/next.svg", color: "#7c7c7cff" },
-  { name: "FastAPI", bg: "/fastapi.svg", color: "#0f766e" },
-  { name: "Python", bg: "/python.svg", color: "#1e3a8a" },
-  { name: "MongoDB", bg: "/mongodb.svg", color: "#166534" },
-  { name: "GitHub", bg: "/github.svg", color: "#07144d" },
+  { name: "React", bg: "/react.svg", color: "#ffffffff" },    // bright cyan
+  { name: "Next.js", bg: "/next.svg", color: "#adadadff" },   // light slate
+  { name: "FastAPI", bg: "/fastapi.svg", color: "#38c998ff" },// emerald
+  { name: "Python", bg: "/python.svg", color: "#fbbf24" },  // amber
+  { name: "MongoDB", bg: "/mongodb.svg", color: "#a855f7" },// purple
+  { name: "GitHub", bg: "/github.svg", color: "#4554e2ff" },  // white
 ];
 
 export default function CardStack() {
@@ -103,7 +103,9 @@ export default function CardStack() {
               backgroundImage: `url(${card.bg})`,
               backgroundRepeat: "no-repeat",
               backgroundPosition: "center",
-              backgroundSize: "90px",
+              backgroundSize: "96px",
+              boxShadow:
+                "0 25px 60px rgba(255,255,255,0.18), 0 10px 30px rgba(0,0,0,0.35)",
               // Match GSAP's starting state to avoid an initial flash
               opacity: 0,
               transform: "translate3d(0, 240px, 0) rotate(0deg)",

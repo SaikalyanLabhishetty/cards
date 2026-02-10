@@ -8,8 +8,6 @@ import gsap from "gsap";
 const shapePaths = [
   // Four-lobed clover
   "M0,-150 L100,-100 L150,0 L100,100 L0,150 L-100,100 L-150,0 L-100,-100 Z",
-  // Lightning bolt
-  "M40,-150 L120,-30 L20,-30 L100,90 L20,90 L60,150 L-40,30 L40,30 Z",
   // Diamond
   "M0,-150 L110,-50 L150,0 L110,50 L0,150 L-110,50 L-150,0 L-110,-50 Z",
   // Speech bubble with tail
@@ -91,7 +89,7 @@ export default function About() {
         </div>
 
         <div className="relative w-full aspect-square flex items-center justify-center">
-          <div className="absolute inset-0 blur-2xl bg-gradient-to-br from-orange-300/30 via-pink-300/25 to-purple-300/20 opacity-70" />
+          <div className="absolute inset-0 blur-2xl bg-gradient-to-br from-orange-400/45 via-pink-400/35 to-purple-400/30 opacity-90" />
           <svg
             className="relative drop-shadow-2xl"
             viewBox="-220 -220 440 440"
@@ -100,11 +98,11 @@ export default function About() {
           >
             <defs>
               <linearGradient id="sunset" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#fb923c" />
-              <stop offset="60%" stopColor="#f472b6" />
-              <stop offset="100%" stopColor="#a855f7" />
-            </linearGradient>
-          </defs>
+                <stop offset="0%" stopColor="#fbbf24" />
+                <stop offset="55%" stopColor="#fb7185" />
+                <stop offset="100%" stopColor="#a855f7" />
+              </linearGradient>
+            </defs>
             <path
               ref={morphRef}
               d={shapePaths[0]}
