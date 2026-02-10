@@ -1,6 +1,6 @@
 "use client";
 
-import { useLayoutEffect, useRef } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { MotionPathPlugin } from "gsap/MotionPathPlugin";
 
@@ -12,6 +12,94 @@ export default function Connected() {
   const traceTailRef = useRef<SVGPathElement | null>(null);
   const ballRef = useRef<SVGCircleElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const connectBtnRef = useRef<HTMLAnchorElement | null>(null);
+  const overlayRef = useRef<HTMLDivElement | null>(null);
+  const envelopeRef = useRef<HTMLDivElement | null>(null);
+  const flapRef = useRef<HTMLDivElement | null>(null);
+  const letterRef = useRef<HTMLDivElement | null>(null);
+  const openTlRef = useRef<gsap.core.Timeline | null>(null);
+  const sendTlRef = useRef<gsap.core.Timeline | null>(null);
+
+  const [postcardOpen, setPostcardOpen] = useState(false);
+  const [closing, setClosing] = useState(false);
+
+  const handleOpenPostcard = (event: any) => {
+    event.preventDefault();
+    if (closing) return;
+    setClosing(false);
+    setPostcardOpen(true);
+  };
+
+  const handleSend = (event?: any) => {
+    event?.preventDefault();
+    if (!postcardOpen || closing) return;
+    setClosing(true);
+
+    const overlay = overlayRef.current;
+    const envelope = envelopeRef.current;
+    const flap = flapRef.current;
+    const letter = letterRef.current;
+    const connectBtn = connectBtnRef.current;
+    if (!overlay || !envelope || !flap || !letter || !connectBtn) return;
+
+    const { innerWidth: vw, innerHeight: vh } = window;
+    const btnRect = connectBtn.getBoundingClientRect();
+    const toX = btnRect.left + btnRect.width / 2 - vw / 2;
+    const toY = btnRect.top + btnRect.height / 2 - vh / 2;
+
+    sendTlRef.current?.kill();
+    sendTlRef.current = gsap.timeline({
+      defaults: { ease: "power2.inOut" },
+      onComplete: () => {
+        setPostcardOpen(false);
+        setClosing(false);
+      },
+    });
+
+    sendTlRef.current
+      .to(letter, { y: 90, opacity: 0, duration: 0.4 }, 0)
+      .to(flap, { rotateX: 0, duration: 0.35 }, 0)
+      .to(
+        envelope,
+        { width: 190, height: 190, borderRadius: "40% 40% 55% 55%", duration: 0.45, ease: "power3.inOut" },
+        0.1,
+      )
+      .to(envelope, { rotation: -25, y: -40, scale: 0.8, duration: 0.45 }, 0.25)
+      .to(envelope, { x: toX, y: toY, rotation: -320, scale: 0.08, duration: 0.9, ease: "power4.in" }, 0.65)
+      .to(overlay, { opacity: 0, duration: 0.35, ease: "power1.out" }, 0.65);
+  };
+
+  const handleClose = () => {
+    if (!postcardOpen || closing) return;
+    setClosing(true);
+
+    const overlay = overlayRef.current;
+    const envelope = envelopeRef.current;
+    const flap = flapRef.current;
+    const letter = letterRef.current;
+    const connectBtn = connectBtnRef.current;
+    if (!overlay || !envelope || !flap || !letter || !connectBtn) return;
+
+    const { innerWidth: vw, innerHeight: vh } = window;
+    const btnRect = connectBtn.getBoundingClientRect();
+    const toX = btnRect.left + btnRect.width / 2 - vw / 2;
+    const toY = btnRect.top + btnRect.height / 2 - vh / 2;
+
+    sendTlRef.current?.kill();
+    sendTlRef.current = gsap.timeline({
+      defaults: { ease: "power2.inOut" },
+      onComplete: () => {
+        setPostcardOpen(false);
+        setClosing(false);
+      },
+    });
+
+    sendTlRef.current
+      .to(letter, { y: 90, opacity: 0, duration: 0.3 }, 0)
+      .to(flap, { rotateX: 0, duration: 0.3 }, 0.05)
+      .to(envelope, { x: toX, y: toY, scale: 0.2, rotation: -8, duration: 0.55 }, 0.15)
+      .to(overlay, { opacity: 0, duration: 0.35, ease: "power1.out" }, 0.2);
+  };
 
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
@@ -94,6 +182,52 @@ export default function Connected() {
 
     return () => ctx.revert();
   }, []);
+
+  useLayoutEffect(() => {
+    if (!postcardOpen) return;
+
+    const ctx = gsap.context(() => {
+      const overlay = overlayRef.current;
+      const envelope = envelopeRef.current;
+      const flap = flapRef.current;
+      const letter = letterRef.current;
+      const connectBtn = connectBtnRef.current;
+      if (!overlay || !envelope || !flap || !letter || !connectBtn) return;
+
+      const { innerWidth: vw, innerHeight: vh } = window;
+      const btnRect = connectBtn.getBoundingClientRect();
+      const fromX = btnRect.left + btnRect.width / 2 - vw / 2;
+      const fromY = btnRect.top + btnRect.height / 2 - vh / 2;
+
+      gsap.set(overlay, { opacity: 0, pointerEvents: "auto" });
+      gsap.set(letter, { y: 90, opacity: 0 });
+      gsap.set(flap, { rotateX: 0, transformOrigin: "50% 0%" });
+      gsap.set(envelope, {
+        x: fromX,
+        y: fromY,
+        scale: 0.2,
+        rotation: -8,
+        transformOrigin: "50% 50%",
+        width: 520,
+        height: 420,
+        borderRadius: "22px",
+      });
+
+      openTlRef.current?.kill();
+      openTlRef.current = gsap.timeline({ defaults: { ease: "power2.out" } });
+      openTlRef.current
+        .to(overlay, { opacity: 1, duration: 0.25 }, 0)
+        .to(envelope, { x: 0, y: 0, scale: 1, rotation: 0, duration: 0.8, ease: "power3.out" }, 0)
+        .to(flap, { rotateX: -150, duration: 0.55 }, 0.35)
+        .to(letter, { y: -12, opacity: 1, duration: 0.55 }, 0.55);
+    }, containerRef);
+
+    return () => {
+      ctx.revert();
+      openTlRef.current?.kill();
+      sendTlRef.current?.kill();
+    };
+  }, [postcardOpen]);
 
   return (
     <div
@@ -180,10 +314,11 @@ export default function Connected() {
         </a>
 
         <a
-          href="#"
+          ref={connectBtnRef}
+          href="#connect"
+          onClick={handleOpenPostcard}
           className="group flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 transition hover:border-white/25 hover:bg-white/10"
-          target="_blank"
-          rel="noreferrer"
+          role="button"
         >
           <svg viewBox="0 0 24 24" className="h-5 w-5 fill-none stroke-current text-emerald-300">
             <path
@@ -194,7 +329,7 @@ export default function Connected() {
             />
             <path d="m21.854 2.147-10.94 10.939" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          Send
+          Connect
         </a>
 
         <a
@@ -212,6 +347,93 @@ export default function Connected() {
           Résumé
         </a>
       </div>
+
+      {postcardOpen && (
+        <div ref={overlayRef} className="fixed inset-0 z-50 flex items-center justify-center" style={{ opacity: 0 }}>
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-md" />
+          <div className="relative flex h-full w-full items-center justify-center px-6">
+            <div
+              ref={envelopeRef}
+              className="relative overflow-hidden rounded-[22px] border border-white/10 bg-gradient-to-br from-sky-500/85 via-indigo-500/80 to-purple-600/85 shadow-[0_30px_80px_rgba(0,0,0,0.45)] transform-gpu"
+              style={{ width: 520, height: 420, perspective: "1200px", transformStyle: "preserve-3d" }}
+            >
+              <div
+                ref={flapRef}
+                className="absolute left-0 right-0 top-0 h-1/2 bg-gradient-to-b from-white via-slate-50 to-white/40 shadow-md"
+                style={{ clipPath: "polygon(0 0, 100% 0, 50% 100%)", transformOrigin: "50% 0%" }}
+              />
+
+              <div className="absolute inset-0 pointer-events-none border border-white/20 rounded-[22px]" />
+
+              <div
+                ref={letterRef}
+                className="absolute left-[5%] top-[7%] flex h-[86%] w-[90%] flex-col gap-3 rounded-xl bg-white px-4 py-3 text-gray-900 shadow-xl overflow-hidden"
+              >
+                <div className="flex items-center justify-between gap-2 text-sm font-semibold text-slate-700">
+                  <div className="flex items-center gap-2">
+                    <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 shadow-[0_0_0_4px_rgba(16,185,129,0.15)]" />
+                    Little Post
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleClose}
+                    aria-label="Close postcard"
+                    className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500 shadow hover:text-slate-700 hover:bg-white transition"
+                  >
+                    ×
+                  </button>
+                </div>
+
+                <form className="flex h-full flex-col text-sm" onSubmit={handleSend}>
+                  <div className="flex-1 overflow-y-auto pr-1 flex flex-col gap-3">
+                    <label className="flex flex-col gap-1">
+                      <span className="text-[12px] font-medium text-slate-500">Your email</span>
+                      <input
+                        type="email"
+                        name="email"
+                        required
+                        className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm shadow-inner focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+                        placeholder="you@example.com"
+                      />
+                    </label>
+
+                    <label className="flex flex-col gap-1">
+                      <span className="text-[12px] font-medium text-slate-500">Message</span>
+                      <textarea
+                        name="message"
+                        required
+                        rows={5}
+                        className="w-full resize-none rounded-lg border border-slate-200 px-3 py-2 text-sm shadow-inner focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                        placeholder="Tell me about your idea..."
+                      />
+                    </label>
+                  </div>
+
+                  <div className="sticky bottom-0 flex items-center justify-between gap-2 text-xs text-slate-500 bg-white pt-2 pb-1 border-t border-slate-200">
+                    <span>Folds like a postcard</span>
+                    <button
+                      type="submit"
+                      disabled={closing}
+                      className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-emerald-500 to-cyan-400 px-3 py-1.5 text-white font-semibold shadow-md transition hover:shadow-lg disabled:opacity-60"
+                    >
+                      <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="1.8" strokeLinecap="round">
+                        <path d="M4 12h12" />
+                        <path d="M10 6l6 6-6 6" />
+                      </svg>
+                      Send
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between text-[11px] uppercase tracking-[0.18em] text-white/80">
+                <span>From: You</span>
+                <span>To: Kalyan</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
