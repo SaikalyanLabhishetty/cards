@@ -17,6 +17,8 @@ export default function Connected() {
   const envelopeRef = useRef<HTMLDivElement | null>(null);
   const flapRef = useRef<HTMLDivElement | null>(null);
   const letterRef = useRef<HTMLDivElement | null>(null);
+  const successIconRef = useRef<SVGSVGElement | null>(null);
+  const successMessageRef = useRef<HTMLDivElement | null>(null);
   const openTlRef = useRef<gsap.core.Timeline | null>(null);
   const sendTlRef = useRef<gsap.core.Timeline | null>(null);
 
@@ -36,16 +38,11 @@ export default function Connected() {
     setClosing(true);
 
     const overlay = overlayRef.current;
-    const envelope = envelopeRef.current;
     const flap = flapRef.current;
     const letter = letterRef.current;
-    const connectBtn = connectBtnRef.current;
-    if (!overlay || !envelope || !flap || !letter || !connectBtn) return;
-
-    const { innerWidth: vw, innerHeight: vh } = window;
-    const btnRect = connectBtn.getBoundingClientRect();
-    const toX = btnRect.left + btnRect.width / 2 - vw / 2;
-    const toY = btnRect.top + btnRect.height / 2 - vh / 2;
+    const successIcon = successIconRef.current;
+    const successMessage = successMessageRef.current;
+    if (!overlay || !flap || !letter || !successIcon || !successMessage) return;
 
     sendTlRef.current?.kill();
     sendTlRef.current = gsap.timeline({
@@ -57,16 +54,13 @@ export default function Connected() {
     });
 
     sendTlRef.current
-      .to(letter, { y: 90, opacity: 0, duration: 0.4 }, 0)
-      .to(flap, { rotateX: 0, duration: 0.35 }, 0)
-      .to(
-        envelope,
-        { width: 190, height: 190, borderRadius: "40% 40% 55% 55%", duration: 0.45, ease: "power3.inOut" },
-        0.1,
-      )
-      .to(envelope, { rotation: -25, y: -40, scale: 0.8, duration: 0.45 }, 0.25)
-      .to(envelope, { x: toX, y: toY, rotation: -320, scale: 0.08, duration: 0.9, ease: "power4.in" }, 0.65)
-      .to(overlay, { opacity: 0, duration: 0.35, ease: "power1.out" }, 0.65);
+      .to(letter, { y: 90, opacity: 0, duration: 0.35 }, 0)
+      .to(flap, { rotateX: 0, duration: 0.3 }, 0.05)
+      // simple confirmation: flash a check mark then fade out overlay
+      .to(successIcon, { opacity: 1, scale: 1.4, duration: 0.25, ease: "back.out(1.6)" }, 0.15)
+      .to(successIcon, { scale: 1.9, duration: 0.22, ease: "power1.out" }, 0.4)
+      .to(successMessage, { opacity: 1, y: 0, scale: 1, duration: 0.25, ease: "power2.out" }, 0.3)
+      .to(overlay, { opacity: 0, duration: 0.45, ease: "power1.out" }, 0.8);
   };
 
   const handleClose = () => {
@@ -78,7 +72,9 @@ export default function Connected() {
     const flap = flapRef.current;
     const letter = letterRef.current;
     const connectBtn = connectBtnRef.current;
-    if (!overlay || !envelope || !flap || !letter || !connectBtn) return;
+    const successMessage = successMessageRef.current;
+    const successIcon = successIconRef.current;
+    if (!overlay || !envelope || !flap || !letter || !connectBtn || !successIcon || !successMessage) return;
 
     const { innerWidth: vw, innerHeight: vh } = window;
     const btnRect = connectBtn.getBoundingClientRect();
@@ -97,8 +93,22 @@ export default function Connected() {
     sendTlRef.current
       .to(letter, { y: 90, opacity: 0, duration: 0.3 }, 0)
       .to(flap, { rotateX: 0, duration: 0.3 }, 0.05)
+      .set(successIcon, { opacity: 0, scale: 0, x: 0, y: 0, rotation: 0 }, 0)
+      .set(successMessage, { opacity: 0, scale: 0.9, y: 8 }, 0)
+      .set(envelope, {
+        clearProps: "background,clipPath,boxShadow",
+        width: 520,
+        height: 420,
+        borderRadius: "22px",
+        clipPath: "none",
+        boxShadow: "none",
+      })
       .to(envelope, { x: toX, y: toY, scale: 0.2, rotation: -8, duration: 0.55 }, 0.15)
-      .to(overlay, { opacity: 0, duration: 0.35, ease: "power1.out" }, 0.2);
+      // after envelope fully closes, reveal success state
+      .to(successIcon, { opacity: 1, scale: 1.1, duration: 0.2, ease: "back.out(1.6)" }, 0.8)
+      .to(successIcon, { scale: 1.4, duration: 0.16, ease: "power1.out" }, 1.05)
+      .to(successMessage, { opacity: 1, scale: 1, y: 0, duration: 0.22, ease: "power2.out" }, 0.92)
+      .to(overlay, { opacity: 0, duration: 0.35, ease: "power1.out" }, 1.25);
   };
 
   useLayoutEffect(() => {
@@ -191,8 +201,10 @@ export default function Connected() {
       const envelope = envelopeRef.current;
       const flap = flapRef.current;
       const letter = letterRef.current;
+      const successIcon = successIconRef.current;
+      const successMessage = successMessageRef.current;
       const connectBtn = connectBtnRef.current;
-      if (!overlay || !envelope || !flap || !letter || !connectBtn) return;
+      if (!overlay || !envelope || !flap || !letter || !connectBtn || !successIcon || !successMessage) return;
 
       const { innerWidth: vw, innerHeight: vh } = window;
       const btnRect = connectBtn.getBoundingClientRect();
@@ -202,6 +214,9 @@ export default function Connected() {
       gsap.set(overlay, { opacity: 0, pointerEvents: "auto" });
       gsap.set(letter, { y: 90, opacity: 0 });
       gsap.set(flap, { rotateX: 0, transformOrigin: "50% 0%" });
+      gsap.set(successIcon, { opacity: 0, scale: 0, x: 0, y: 0, rotation: 0, transformOrigin: "50% 50%" });
+      gsap.set(successMessage, { opacity: 0, scale: 0.9, y: 8, transformOrigin: "50% 50%" });
+      gsap.set(envelope, { clearProps: "background,clipPath,boxShadow" });
       gsap.set(envelope, {
         x: fromX,
         y: fromY,
@@ -211,6 +226,8 @@ export default function Connected() {
         width: 520,
         height: 420,
         borderRadius: "22px",
+        clipPath: "none",
+        boxShadow: "none",
       });
 
       openTlRef.current?.kill();
@@ -429,6 +446,31 @@ export default function Connected() {
               <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between text-[11px] uppercase tracking-[0.18em] text-white/80">
                 <span>From: You</span>
                 <span>To: Kalyan</span>
+              </div>
+
+            </div>
+            <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-3 text-center">
+              <svg
+                ref={successIconRef}
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                className="h-16 w-16 text-emerald-300 drop-shadow-[0_10px_25px_rgba(16,185,129,0.25)]"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                style={{ opacity: 0, transformOrigin: "50% 50%" }}
+              >
+                <circle cx="12" cy="12" r="9" />
+                <path d="m8 12.5 3 3.2 5-6.2" />
+              </svg>
+              <div
+                ref={successMessageRef}
+                className="text-white text-base font-semibold tracking-wide drop-shadow-[0_6px_18px_rgba(16,185,129,0.35)]"
+                style={{ opacity: 0 }}
+              >
+                Sent successfully
               </div>
             </div>
           </div>
