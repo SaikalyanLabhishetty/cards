@@ -249,10 +249,10 @@ export default function Connected() {
   return (
     <div
       ref={containerRef}
-      className="relative bg-[#0f111a] text-white px-6 py-12 md:py-16 flex flex-col items-center gap-6 rounded-3xl overflow-hidden border border-white/5"
+      className="relative bg-[#0f111a] text-white px-6 py-14 md:py-18 lg:py-20 flex flex-col items-center gap-8 rounded-3xl overflow-hidden border border-white/5 min-h-[640px]"
     >
       <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_20%_10%,rgba(99,102,241,0.18),transparent_32%),radial-gradient(circle_at_80%_0%,rgba(45,212,191,0.16),transparent_28%),radial-gradient(circle_at_55%_90%,rgba(236,72,153,0.12),transparent_28%)]" />
-      <div className="relative text-center space-y-2">
+      <div className="relative text-center space-y-2 max-w-3xl">
         <p className="text-xs tracking-[0.35em] uppercase text-gray-400">Connect</p>
         <h3 className="text-2xl md:text-3xl font-semibold">Let's get connected</h3>
         <p className="text-sm md:text-base text-gray-300 max-w-2xl">
@@ -260,11 +260,11 @@ export default function Connected() {
         </p>
       </div>
 
-      <div className="relative w-full max-w-5xl flex justify-center overflow-hidden">
+      <div className="relative w-full max-w-6xl flex-1 flex items-center justify-center overflow-hidden">
         <svg
           viewBox="0 0 850 100"
-          className="w-full max-w-5xl drop-shadow-[0_18px_55px_rgba(0,0,0,0.45)]"
-          style={{ minHeight: "120px" }}
+          className="w-full max-w-6xl drop-shadow-[0_18px_55px_rgba(0,0,0,0.45)] h-48 md:h-56 lg:h-64"
+          style={{ minHeight: "180px" }}
         >
           {/* Base path - your "kalyanlabhishetty" text */}
           <path
@@ -301,7 +301,7 @@ export default function Connected() {
         </svg>
       </div>
 
-      <div className="flex flex-wrap items-center justify-center gap-3 text-sm text-gray-200">
+      <div className="flex flex-wrap items-center justify-center gap-3 text-sm text-gray-200 mt-auto pt-2">
         <a
           href="https://www.linkedin.com/in/kalyan-labhishetty-b16a90179/"
           className="group flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 transition hover:border-white/25 hover:bg-white/10"

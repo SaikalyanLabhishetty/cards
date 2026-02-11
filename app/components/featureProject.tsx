@@ -1,6 +1,7 @@
 "use client";
 
 import { useLayoutEffect, useRef } from "react";
+import Image from "next/image";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
@@ -14,6 +15,7 @@ const projectCards = [
     from: "#0f172a",
     to: "#06b6d4",
     accent: "#f8fafc",
+    image: "/projects/applysense.png",
   },
   {
     title: "Testlify",
@@ -22,6 +24,7 @@ const projectCards = [
     from: "#111827",
     to: "#a855f7",
     accent: "#ede9fe",
+    image: "/projects/examportal.png",
   },
   {
     title: "Automation Rail",
@@ -82,14 +85,14 @@ export default function FeatureProject() {
         defaults: { ease: "power2.out" },
         scrollTrigger: {
           trigger: sectionRef.current,
-          start: "top center",
-          end: "+=1000",
+          start: "top 75%",
+          end: "+=1700",
           scrub: 1.2,
         },
       });
 
       cards.forEach((card, i) => {
-        const base = i * 0.2; // staggering by card index
+        const base = i * 0.55; // slower stagger so each card stays readable
         // Hold the card in place for a moment as the section enters view
         tl.to(
           card,
@@ -107,11 +110,11 @@ export default function FeatureProject() {
         tl.to(
           card,
           {
-            y: -260 - i * 34,
-            opacity: 0,
+            y: -200 - i * 28,
+            opacity: 0.35,
             ease: "power1.inOut",
           },
-          base + 0.5,
+          base + 1.4,
         );
       });
     }, sectionRef);
@@ -126,7 +129,7 @@ export default function FeatureProject() {
     >
       <div className="absolute inset-0 pointer-events-none opacity-60 bg-[radial-gradient(circle_at_10%_20%,rgba(34,211,238,0.12),transparent_25%),radial-gradient(circle_at_80%_0%,rgba(168,85,247,0.18),transparent_28%),radial-gradient(circle_at_60%_80%,rgba(249,115,22,0.14),transparent_22%)]" />
 
-      <div className="relative max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-center place-items-center">
+      <div className="relative max-w-6xl mx-auto flex flex-col items-center gap-12">
         <div ref={copyRef} className="space-y-4 text-center max-w-2xl mx-auto">
           <p
             data-animate
@@ -142,7 +145,7 @@ export default function FeatureProject() {
           </p>
         </div>
 
-        <div className="relative h-[520px] flex items-center justify-center w-full">
+        <div className="relative h-[600px] flex items-center justify-center w-full">
           <div className="absolute inset-0 bg-gradient-to-br from-cyan-400/10 via-emerald-400/8 to-orange-400/8 blur-3xl" />
           <div className="relative h-full w-full flex items-center justify-center">
             {projectCards.map((card, i) => (
@@ -151,7 +154,7 @@ export default function FeatureProject() {
                 ref={(el) => {
                   if (el) cardsRef.current[i] = el;
                 }}
-                className="absolute w-full max-w-xl md:max-w-2xl min-h-[320px] rounded-[26px] overflow-hidden border border-white/10 backdrop-blur-sm"
+                className="absolute w-[92%] max-w-3xl min-h-[380px] rounded-[26px] overflow-hidden border border-white/10 backdrop-blur-sm"
                 style={{
                   zIndex: projectCards.length - i,
                   background: `linear-gradient(130deg, ${card.from}, ${card.to})`,
@@ -181,22 +184,37 @@ export default function FeatureProject() {
                   </div>
 
                   <div className="col-span-3 relative overflow-hidden">
-                    <div
-                      className="absolute inset-0 opacity-40"
-                      style={{
-                        backgroundImage:
-                          "radial-gradient(circle at 12px 12px, rgba(255,255,255,0.3) 1.5px, transparent 0)",
-                        backgroundSize: "26px 26px",
-                      }}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-tr from-black/15 via-transparent to-white/10" />
+                    {!card.image && (
+                      <div
+                        className="absolute inset-0 opacity-40"
+                        style={{
+                          backgroundImage:
+                            "radial-gradient(circle at 12px 12px, rgba(255,255,255,0.3) 1.5px, transparent 0)",
+                          backgroundSize: "26px 26px",
+                        }}
+                      />
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-tr from-black/20 via-transparent to-white/10" />
+                    {card.image && (
+                      <>
+                        <Image
+                          src={card.image}
+                          alt={`${card.title} showcase`}
+                          fill
+                          sizes="(max-width: 768px) 100vw, 720px"
+                          className="object-cover"
+                          priority={i === 0}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-black/20 to-transparent" />
+                      </>
+                    )}
                     <div className="relative h-full flex flex-col justify-between p-6 md:p-8">
                       <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-white/80">
                         <span className="inline-block w-8 h-0.5 bg-white/70" />
-                        Visual Canvas
+                        {card.image ? "Live Preview" : "Visual Canvas"}
                       </div>
                       <div className="text-right text-4xl md:text-5xl font-black tracking-tight text-white/90 drop-shadow-lg">
-                        SVG / IMG
+                        {card.image ? card.title : "SVG / IMG"}
                       </div>
                     </div>
                   </div>
