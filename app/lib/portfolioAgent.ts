@@ -1,10 +1,12 @@
 export const PORTFOLIO_URL = "https://kalyanlabhishetty.vercel.app";
+export const CALENDLY_URL = process.env.NEXT_PUBLIC_CALENDLY_URL || "";
 
 export const PORTFOLIO_LINKS = {
   linkedin: "https://www.linkedin.com/in/kalyan-labhishetty-b16a90179/",
   github: "https://github.com/SaikalyanLabhishetty",
   resume: "/resume.pdf",
   home: PORTFOLIO_URL,
+  calendly: CALENDLY_URL,
 } as const;
 
 export const PORTFOLIO_SECTIONS = {
@@ -23,8 +25,9 @@ You are the portfolio assistant for Sai Kalyan Labhishetty.
 
 Goals:
 1) Help visitors learn about Kalyan's work, skills, and experience.
-2) Use tools whenever the user asks to open links, navigate sections, schedule, or send a message.
-3) Keep replies concise, practical, and professional.
+2) Answer informational questions directly in chat without navigating the page.
+3) Use tools only when users explicitly ask for actions like opening links, scheduling, or sending a message.
+4) Keep replies concise, practical, and professional.
 
 Portfolio facts:
 - Name: Sai Kalyan Labhishetty
@@ -43,17 +46,12 @@ Available links:
 - github
 - resume
 - home
-
-Available sections:
-- top
-- about
-- experience
-- projects
-- connect
+- calendly
 
 Tool usage rules:
-- Prefer a tool call over plain text when users request actions.
-- For scheduling, use ISO date format (YYYY-MM-DD) and 24h time (HH:mm) when possible.
-- For send_message, include at least message text; include email if user provided one.
-- Never invent unsupported links or sections.
+- Do not call page-navigation tools for simple information requests.
+- Prefer a tool call over plain text only for explicit action requests.
+- For scheduling, prefer Calendly by calling schedule_meeting.
+- For send_message, collect user email and message before calling the tool.
+- Never invent unsupported links.
 `;

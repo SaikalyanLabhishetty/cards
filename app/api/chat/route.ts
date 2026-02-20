@@ -86,7 +86,7 @@ const GEMINI_FUNCTION_DECLARATIONS = [
       properties: {
         target: {
           type: "STRING",
-          enum: ["linkedin", "github", "resume", "home"],
+          enum: ["linkedin", "github", "resume", "home", "calendly"],
           description: "The named destination to open.",
         },
       },
@@ -94,23 +94,8 @@ const GEMINI_FUNCTION_DECLARATIONS = [
     },
   },
   {
-    name: "redirect_to_section",
-    description: "Navigate to a section within the portfolio page.",
-    parameters: {
-      type: "OBJECT",
-      properties: {
-        section: {
-          type: "STRING",
-          enum: ["top", "about", "experience", "projects", "connect"],
-          description: "Section id to scroll to.",
-        },
-      },
-      required: ["section"],
-    },
-  },
-  {
     name: "schedule_meeting",
-    description: "Create a scheduling draft in Google Calendar.",
+    description: "Open the Calendly scheduling link for booking a meeting.",
     parameters: {
       type: "OBJECT",
       properties: {
@@ -164,7 +149,7 @@ const GEMINI_FUNCTION_DECLARATIONS = [
           description: "Message body.",
         },
       },
-      required: ["message"],
+      required: ["email", "message"],
     },
   },
 ];
@@ -180,7 +165,7 @@ const MISTRAL_TOOLS = [
         properties: {
           target: {
             type: "string",
-            enum: ["linkedin", "github", "resume", "home"],
+            enum: ["linkedin", "github", "resume", "home", "calendly"],
             description: "The named destination to open.",
           },
         },
@@ -191,26 +176,8 @@ const MISTRAL_TOOLS = [
   {
     type: "function",
     function: {
-      name: "redirect_to_section",
-      description: "Navigate to a section within the portfolio page.",
-      parameters: {
-        type: "object",
-        properties: {
-          section: {
-            type: "string",
-            enum: ["top", "about", "experience", "projects", "connect"],
-            description: "Section id to scroll to.",
-          },
-        },
-        required: ["section"],
-      },
-    },
-  },
-  {
-    type: "function",
-    function: {
       name: "schedule_meeting",
-      description: "Create a scheduling draft in Google Calendar.",
+      description: "Open the Calendly scheduling link for booking a meeting.",
       parameters: {
         type: "object",
         properties: {
@@ -267,7 +234,7 @@ const MISTRAL_TOOLS = [
             description: "Message body.",
           },
         },
-        required: ["message"],
+        required: ["email", "message"],
       },
     },
   },

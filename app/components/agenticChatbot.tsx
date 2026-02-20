@@ -1,12 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
-import {
-  PORTFOLIO_LINKS,
-  PORTFOLIO_SECTIONS,
-  type PortfolioLinkTarget,
-  type PortfolioSectionTarget,
-} from "@/app/lib/portfolioAgent";
+import { PORTFOLIO_LINKS, type PortfolioLinkTarget } from "@/app/lib/portfolioAgent";
 
 type UiRole = "assistant" | "user" | "action" | "error";
 
@@ -32,14 +27,10 @@ type ChatApiResponse = {
   error?: string;
 };
 
-const sectionAliases: Record<string, PortfolioSectionTarget> = {
-  top: "top",
-  home: "top",
-  about: "about",
-  experience: "experience",
-  projects: "projects",
-  connect: "connect",
-  contact: "connect",
+type SendMailApiResponse = {
+  ok?: boolean;
+  message?: string;
+  error?: string;
 };
 
 const linkLabels: Record<PortfolioLinkTarget, string> = {
@@ -47,6 +38,7 @@ const linkLabels: Record<PortfolioLinkTarget, string> = {
   github: "GitHub",
   resume: "resume",
   home: "portfolio home",
+  calendly: "Calendly",
 };
 
 function makeId() {
@@ -61,31 +53,26 @@ function readString(args: Record<string, unknown>, key: string) {
   return typeof value === "string" ? value.trim() : "";
 }
 
-function readNumber(args: Record<string, unknown>, key: string) {
-  const value = args[key];
-  return typeof value === "number" && Number.isFinite(value) ? value : null;
+function isPortfolioLinkTarget(value: string): value is PortfolioLinkTarget {
+  return Object.prototype.hasOwnProperty.call(PORTFOLIO_LINKS, value);
 }
 
-function formatCalendarStamp(date: Date) {
-  return date.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
-}
+function hasActionIntent(userQuestion: string, toolName: string) {
+  const text = userQuestion.toLowerCase();
 
-function normalizeSection(value: string): PortfolioSectionTarget | null {
-  const normalized = value.toLowerCase();
-  return normalized in sectionAliases ? sectionAliases[normalized] : null;
-}
-
-function buildStartDate(date: string, time: string) {
-  if (!date) return null;
-
-  const normalizedTime = /^\d{2}:\d{2}$/.test(time) ? time : "10:00";
-  const parsed = new Date(`${date}T${normalizedTime}:00`);
-
-  if (Number.isNaN(parsed.getTime())) {
-    return null;
+  if (toolName === "send_message") {
+    return /(send|mail|email|message|contact|reach)/.test(text);
   }
 
-  return parsed;
+  if (toolName === "schedule_meeting") {
+    return /(schedule|meeting|book|call|appointment|calendly)/.test(text);
+  }
+
+  if (toolName === "open_link") {
+    return /(open|show|visit|go to|linkedin|github|resume|calendly)/.test(text);
+  }
+
+  return true;
 }
 
 export default function AgenticChatbot() {
@@ -97,7 +84,7 @@ export default function AgenticChatbot() {
       id: makeId(),
       role: "assistant",
       content:
-        "Hi, I am Kalyan's AI assistant. Ask about projects, experience, links, scheduling, or contact.",
+        "Hi, I am Kalyan's AI assistant. I explain projects and experience in chat. I execute schedule/send/open actions when your intent is clear.",
     },
   ]);
 
@@ -120,98 +107,88 @@ export default function AgenticChatbot() {
     setMessages((previous) => [...previous, { id: makeId(), role, content }]);
   };
 
-  const scrollToSection = (section: PortfolioSectionTarget) => {
-    const element = document.getElementById(PORTFOLIO_SECTIONS[section]);
-    if (!element) return false;
-
-    element.scrollIntoView({ behavior: "smooth", block: "start" });
-    return true;
-  };
-
-  const runToolCall = (toolCall: ToolCall) => {
+  const executeToolCall = async (toolCall: ToolCall): Promise<string> => {
     switch (toolCall.name) {
       case "open_link": {
         const requestedTarget = readString(toolCall.args, "target").toLowerCase();
-        if (!requestedTarget || !(requestedTarget in PORTFOLIO_LINKS)) {
+        if (!requestedTarget || !isPortfolioLinkTarget(requestedTarget)) {
           return "Could not open that link target.";
         }
 
         const target = requestedTarget as PortfolioLinkTarget;
         const url = PORTFOLIO_LINKS[target];
+
+        if (!url) {
+          return `The ${linkLabels[target]} link is not configured yet.`;
+        }
+
         window.open(url, "_blank", "noopener,noreferrer");
         return `Opened ${linkLabels[target]}.`;
       }
 
-      case "redirect_to_section": {
-        const requestedSection = readString(toolCall.args, "section");
-        const section = normalizeSection(requestedSection);
-
-        if (!section) {
-          return "Could not find that section.";
-        }
-
-        const ok = scrollToSection(section);
-        return ok ? `Moved to the ${section} section.` : `Section ${section} is not available on this page.`;
-      }
-
       case "schedule_meeting": {
-        const title = readString(toolCall.args, "title") || "Portfolio Meeting";
-        const details =
-          readString(toolCall.args, "details") ||
-          "Meeting requested through Sai Kalyan Labhishetty's portfolio assistant.";
-        const timezone = readString(toolCall.args, "timezone");
-        const date = readString(toolCall.args, "date");
-        const time = readString(toolCall.args, "time");
-
-        const start = buildStartDate(date, time);
-        const durationCandidate = readNumber(toolCall.args, "durationMinutes");
-        const durationMinutes = durationCandidate ? Math.max(15, Math.min(180, Math.round(durationCandidate))) : 30;
-
-        const params = new URLSearchParams({
-          action: "TEMPLATE",
-          text: title,
-          details,
-        });
-
-        if (start) {
-          const end = new Date(start.getTime() + durationMinutes * 60 * 1000);
-          params.set("dates", `${formatCalendarStamp(start)}/${formatCalendarStamp(end)}`);
+        const calendlyUrl = PORTFOLIO_LINKS.calendly;
+        if (!calendlyUrl) {
+          return "Calendly is not configured. Add NEXT_PUBLIC_CALENDLY_URL.";
         }
 
-        if (timezone) {
-          params.set("ctz", timezone);
+        const name = readString(toolCall.args, "name");
+        const email = readString(toolCall.args, "email");
+
+        let url: URL;
+        try {
+          url = new URL(calendlyUrl, window.location.origin);
+        } catch {
+          return "Calendly URL is invalid. Check NEXT_PUBLIC_CALENDLY_URL.";
         }
 
-        window.open(`https://calendar.google.com/calendar/render?${params.toString()}`, "_blank", "noopener,noreferrer");
-
-        if (start) {
-          return `Opened a calendar draft for ${start.toLocaleString()}.`;
+        if (name) {
+          url.searchParams.set("name", name);
         }
 
-        return "Opened a calendar draft. Add date and time to finalize scheduling.";
+        if (email) {
+          url.searchParams.set("email", email);
+        }
+
+        window.open(url.toString(), "_blank", "noopener,noreferrer");
+        return "Opened Calendly scheduling page.";
       }
 
       case "send_message": {
+        const name = readString(toolCall.args, "name");
         const email = readString(toolCall.args, "email");
         const subject = readString(toolCall.args, "subject");
         const message = readString(toolCall.args, "message");
 
-        if (!message) {
-          return "Could not prepare a message because the content was empty.";
+        if (!email || !message) {
+          return "Cannot send email yet. Please provide both your email and message.";
         }
 
-        scrollToSection("connect");
-        window.dispatchEvent(
-          new CustomEvent("portfolio:open-contact", {
-            detail: {
-              email,
-              subject,
-              message,
-            },
+        const response = await fetch("/api/contact/send", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name,
+            email,
+            subject,
+            message,
           }),
-        );
+        });
 
-        return "Prepared your message in the contact panel.";
+        let data: SendMailApiResponse = {};
+        try {
+          data = (await response.json()) as SendMailApiResponse;
+        } catch {
+          data = {};
+        }
+
+        if (!response.ok) {
+          return data.error || "Sending email failed.";
+        }
+
+        return data.message || "Message sent successfully.";
       }
 
       default:
@@ -252,10 +229,15 @@ export default function AgenticChatbot() {
       }
 
       if (Array.isArray(data.toolCalls) && data.toolCalls.length > 0) {
-        data.toolCalls.forEach((toolCall) => {
-          const status = runToolCall(toolCall);
+        for (const toolCall of data.toolCalls) {
+          if (!hasActionIntent(question, toolCall.name)) {
+            pushMessage("action", `Skipped ${toolCall.name}: no explicit action intent detected.`);
+            continue;
+          }
+
+          const status = await executeToolCall(toolCall);
           pushMessage("action", status);
-        });
+        }
       }
 
       if (!data.text && (!data.toolCalls || data.toolCalls.length === 0)) {
@@ -287,7 +269,7 @@ export default function AgenticChatbot() {
           <div className="flex items-center justify-between border-b border-cyan-500/20 bg-gradient-to-r from-cyan-500/20 via-blue-500/15 to-purple-500/20 px-4 py-3">
             <div>
               <p className="text-xs uppercase tracking-[0.2em] text-cyan-300">Agentic Bot</p>
-              <p className="text-sm text-gray-200">Portfolio Actions + Answers</p>
+              <p className="text-sm text-gray-200">Answers + Intent-Based Actions</p>
             </div>
             <button
               type="button"
@@ -299,7 +281,7 @@ export default function AgenticChatbot() {
             </button>
           </div>
 
-          <div className="max-h-[360px] space-y-3 overflow-y-auto px-4 py-4 text-sm">
+          <div className="max-h-[400px] space-y-3 overflow-y-auto px-4 py-4 text-sm">
             {messages.map((message) => (
               <div
                 key={message.id}
@@ -316,6 +298,7 @@ export default function AgenticChatbot() {
                 {message.content}
               </div>
             ))}
+
             {sending && <div className="text-xs uppercase tracking-[0.16em] text-cyan-300">Thinking...</div>}
             <div ref={endRef} />
           </div>
@@ -325,7 +308,7 @@ export default function AgenticChatbot() {
               <input
                 value={input}
                 onChange={(event) => setInput(event.target.value)}
-                placeholder="Ask something or request an action"
+                placeholder="Ask about work, schedule, or contact"
                 className="w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-sm text-white outline-none placeholder:text-gray-500 focus:border-cyan-400"
               />
               <button
