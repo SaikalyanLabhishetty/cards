@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useLayoutEffect } from "react";
+import { useRef, useLayoutEffect } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
@@ -14,20 +14,28 @@ const cards = [
   { name: "MongoDB", bg: "/mongodb.svg", color: "rgba(168, 85, 247, 0.1)", shadow: "rgba(168, 85, 247, 0.4)" },
   { name: "GitHub", bg: "/github.svg", color: "rgba(255, 255, 255, 0.05)", shadow: "rgba(255, 255, 255, 0.2)" },
 ];
+const centerIndex = (cards.length - 1) / 2;
 
 export default function CardStack() {
   const cardsRef = useRef<HTMLDivElement[]>([]);
   const mounted = useRef(false);
-  const centerIndex = (cards.length - 1) / 2;
 
-  const spacing = 180;
-  const curveDepth = 60;
-  const rotateDeg = 8;
+  // Responsive values based on screen width are handled inside useLayoutEffect below.
 
   useLayoutEffect(() => {
     mounted.current = true;
 
     const ctx = gsap.context(() => {
+      const viewportWidth = window.innerWidth;
+      const isMobile = viewportWidth < 768;
+      const cardWidth = Math.min(256, Math.max(112, viewportWidth * 0.28));
+      const cardHeight = Math.min(288, Math.max(140, viewportWidth * 0.36));
+      const spacing = Math.min(isMobile ? 74 : 180, cardWidth * (isMobile ? 0.56 : 0.7));
+      const curveDepth = Math.min(isMobile ? 36 : 60, cardHeight * (isMobile ? 0.2 : 0.22));
+      const rotateDeg = isMobile ? 10 : 8;
+      const dropY = isMobile ? 180 : 240;
+      const scrollDistance = isMobile ? 320 : 400;
+
       // Drop in from below, then fan open
       const spreadState = {
         x: (i: number) => (i - centerIndex) * spacing,
@@ -38,7 +46,7 @@ export default function CardStack() {
 
       gsap.set(cardsRef.current, {
         x: 0,
-        y: 240,
+        y: dropY,
         rotate: 0,
         opacity: 0,
         transformOrigin: "50% 100%",
@@ -67,7 +75,7 @@ export default function CardStack() {
         ScrollTrigger.create({
           trigger: ".stack",
           start: "top top",
-          end: "+=400",
+          end: `+=${scrollDistance}`,
           scrub: true,
           pin: true,
           animation: gsap.to(cardsRef.current, {
@@ -88,29 +96,27 @@ export default function CardStack() {
   }, []);
 
   return (
-    <section className="stack min-h-[80vh] bg-transparent relative z-10">
-      <div className="relative w-full flex justify-center pt-12">
-        {/* pt-24 controls how far from top the cards sit */}
+    <section className="stack min-h-[60vh] md:min-h-[80vh] bg-transparent relative z-10">
+      <div className="relative w-full flex justify-center pt-8 md:pt-12">
         {cards.map((card, i) => (
           <div
             key={card.name}
             ref={(el) => {
               if (el) cardsRef.current[i] = el;
             }}
-            className="absolute w-64 h-72 rounded-2xl stack-card backdrop-blur-xl border border-white/20"
+            className="absolute rounded-2xl backdrop-blur-xl border border-white/20"
             style={{
+              width: "clamp(112px, 28vw, 256px)",
+              height: "clamp(140px, 36vw, 288px)",
               backgroundColor: card.color,
               backgroundImage: `url(${card.bg})`,
               backgroundRepeat: "no-repeat",
               backgroundPosition: "center",
-              backgroundSize: "96px",
+              backgroundSize: "clamp(44px, 14vw, 96px)",
               boxShadow: `0 8px 32px 0 rgba(0, 0, 0, 0.37), 0 0 20px ${card.shadow}`,
-              // Match GSAP's starting state to avoid an initial flash
               opacity: 0,
-              transform: "translate3d(0, 240px, 0) rotate(0deg)",
+              transform: "translate3d(0, 180px, 0) rotate(0deg)",
               transformOrigin: "50% 100%",
-
-              // rightmost card on top
               zIndex: i + 1,
             }}
           />

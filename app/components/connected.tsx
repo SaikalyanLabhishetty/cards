@@ -207,8 +207,9 @@ export default function Connected() {
         scale: 0.2,
         rotation: -8,
         transformOrigin: "50% 50%",
-        width: 520,
-        height: 420,
+        width: vw > 640 ? 520 : "90vw",
+        height: vw > 640 ? 420 : "auto",
+        minHeight: vw > 640 ? "auto" : "420px",
         borderRadius: "22px",
         clipPath: "none",
         boxShadow: "none",
@@ -248,8 +249,8 @@ export default function Connected() {
       <div className="relative w-full max-w-6xl flex-1 flex items-center justify-center overflow-hidden">
         <svg
           viewBox="0 0 592.231 72.222"
-          className="w-full max-w-6xl drop-shadow-[0_18px_55px_rgba(0,0,0,0.45)] h-48 md:h-56 lg:h-64"
-          style={{ minHeight: "180px" }}
+          className="w-full max-w-6xl drop-shadow-[0_18px_55px_rgba(0,0,0,0.45)] h-24 sm:h-32 md:h-56 lg:h-64"
+          style={{ minHeight: "100px" }}
         >
           {/* Base path - your "kalyanlabhishetty" text */}
           <path
@@ -362,7 +363,7 @@ export default function Connected() {
             <div
               ref={envelopeRef}
               className="relative overflow-hidden rounded-[22px] border border-white/10 bg-gradient-to-br from-sky-500/85 via-indigo-500/80 to-purple-600/85 shadow-[0_30px_80px_rgba(0,0,0,0.45)] transform-gpu"
-              style={{ width: 520, height: 420, perspective: "1200px", transformStyle: "preserve-3d" }}
+              style={{ width: "90vw", maxWidth: "520px", height: "auto", minHeight: "420px", perspective: "1200px", transformStyle: "preserve-3d" }}
             >
               <div
                 ref={flapRef}

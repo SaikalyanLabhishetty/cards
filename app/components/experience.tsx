@@ -70,11 +70,11 @@ export default function Experience() {
             <div className="max-w-6xl mx-auto relative px-6 md:px-0">
 
                 {/* Title Block */}
-                <div className="text-center mb-16 md:mb-24">
-                    <p className="inline-flex items-center text-xs tracking-[0.35em] uppercase font-semibold text-cyan-400 drop-shadow-[0_0_8px_rgba(6,182,212,0.8)] mb-4">
+                <div className="text-center mb-12 md:mb-24 px-4">
+                    <p className="inline-flex items-center text-[10px] md:text-xs tracking-[0.35em] uppercase font-semibold text-cyan-400 drop-shadow-[0_0_8px_rgba(6,182,212,0.8)] mb-3 md:mb-4">
                         System Timeline
                     </p>
-                    <h2 className="text-4xl md:text-5xl font-semibold leading-tight">
+                    <h2 className="text-3xl md:text-5xl font-semibold leading-tight">
                         <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-cyan-300 to-purple-400">
                             Operational Experience.
                         </span>

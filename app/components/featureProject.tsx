@@ -134,17 +134,17 @@ export default function FeatureProject() {
                   ref={(el) => {
                     if (el) cardsRef.current[index] = el;
                   }}
-                  className="w-full rounded-[26px] overflow-hidden border backdrop-blur-3xl shadow-[0_30px_50px_-12px_rgba(0,0,0,0.5)] will-change-transform"
+                  className="w-full rounded-[26px] overflow-hidden border backdrop-blur-3xl shadow-[0_30px_50px_-12px_rgba(0,0,0,0.5)] will-change-transform flex flex-col md:block"
                   style={{
                     background: `linear-gradient(130deg, ${card.from}, ${card.to})`,
                     borderColor: card.accent,
                     boxShadow: `0 8px 32px 0 rgba(0, 0, 0, 0.4), 0 0 25px ${card.from}`,
-                    height: '500px', // Fixed height for consistency
+                    minHeight: '450px', // Responsive min-height
                   }}
                 >
-                  <div className="grid grid-cols-1 md:grid-cols-5 h-full">
+                  <div className="flex flex-col md:grid md:grid-cols-5 h-full">
                     {/* Left Column (Copy) */}
-                    <div className="md:col-span-2 bg-[#030303]/70 px-6 md:px-10 py-8 md:py-10 flex flex-col justify-between border-b md:border-b-0 md:border-r border-white/5 order-2 md:order-1 h-full max-h-[250px] md:max-h-full">
+                    <div className="md:col-span-2 bg-[#030303]/70 px-6 md:px-10 py-8 md:py-10 flex flex-col justify-between border-b md:border-b-0 md:border-r border-white/5 order-2 md:order-1 flex-1">
                       <div className="space-y-4">
                         <div className="flex items-center gap-3 text-xs tracking-[0.24em] uppercase text-cyan-200 font-semibold drop-shadow-[0_0_8px_rgba(6,182,212,0.8)]">
                           <span
@@ -153,23 +153,23 @@ export default function FeatureProject() {
                           />
                           {card.eyebrow}
                         </div>
-                        <h4 className="text-3xl md:text-4xl font-semibold leading-tight text-white tracking-wide">{card.title}</h4>
-                        <p className="text-gray-300 leading-relaxed text-sm md:text-base font-light overflow-y-auto pr-2 custom-scrollbar">
+                        <h4 className="text-2xl md:text-4xl font-semibold leading-tight text-white tracking-wide">{card.title}</h4>
+                        <p className="text-gray-300 leading-relaxed text-sm md:text-base font-light">
                           {card.body}
                         </p>
                       </div>
-                      <div className="text-xs text-cyan-300 flex items-center gap-3 font-mono mt-4">
-                        <span className="inline-flex h-7 px-4 items-center rounded-md bg-cyan-900/40 border border-cyan-500/30">
+                      <div className="text-[10px] md:text-xs text-cyan-300 flex items-center gap-3 font-mono mt-6 md:mt-4">
+                        <span className="inline-flex h-7 px-3 md:px-4 items-center rounded-md bg-cyan-900/40 border border-cyan-500/30">
                           Active
                         </span>
-                        <span className="inline-flex h-7 px-4 items-center rounded-md bg-purple-900/40 border border-purple-500/30">
+                        <span className="inline-flex h-7 px-3 md:px-4 items-center rounded-md bg-purple-900/40 border border-purple-500/30">
                           Deployed
                         </span>
                       </div>
                     </div>
 
                     {/* Right Column (Visual) */}
-                    <div className="md:col-span-3 relative overflow-hidden bg-[#030303]/80 h-full min-h-[250px] order-1 md:order-2">
+                    <div className="md:col-span-3 relative overflow-hidden bg-[#030303]/80 h-64 md:h-auto order-1 md:order-2">
                       {!card.image && (
                         <div
                           className="absolute inset-0 opacity-40 mix-blend-overlay"
