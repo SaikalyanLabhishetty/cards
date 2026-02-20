@@ -7,6 +7,7 @@ import About from "./components/about";
 import FeatureProject from "./components/featureProject";
 import Connected from "./components/connected";
 // import FeatureWork from "./components/featureWork";
+import AgenticBackground from "./components/agenticBackground";
 
 export default function Home() {
   const subtitle = "3 Years of crafting innovative projects";
@@ -30,7 +31,8 @@ export default function Home() {
   }, [subtitle]);
 
   return (
-    <main className="bg-black text-white">
+    <main className="relative text-white min-h-screen">
+      <AgenticBackground />
       <section className="min-h-screen flex items-center justify-center">
         {/* CENTERED GROUP */}
         <div className="w-full flex flex-col items-center text-center">

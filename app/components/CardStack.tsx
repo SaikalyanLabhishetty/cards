@@ -7,12 +7,12 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 gsap.registerPlugin(ScrollTrigger);
 
 const cards = [
-  { name: "React", bg: "/react.svg", color: "#ffffffff" },    // bright cyan
-  { name: "Next.js", bg: "/next.svg", color: "#adadadff" },   // light slate
-  { name: "FastAPI", bg: "/fastapi.svg", color: "#38c998ff" },// emerald
-  { name: "Python", bg: "/python.svg", color: "#fbbf24" },  // amber
-  { name: "MongoDB", bg: "/mongodb.svg", color: "#a855f7" },// purple
-  { name: "GitHub", bg: "/github.svg", color: "#4554e2ff" },  // white
+  { name: "React", bg: "/react.svg", color: "rgba(6, 182, 212, 0.1)", shadow: "rgba(6, 182, 212, 0.4)" },
+  { name: "Next.js", bg: "/next.svg", color: "rgba(255, 255, 255, 0.05)", shadow: "rgba(255, 255, 255, 0.2)" },
+  { name: "FastAPI", bg: "/fastapi.svg", color: "rgba(16, 185, 129, 0.1)", shadow: "rgba(16, 185, 129, 0.4)" },
+  { name: "Python", bg: "/python.svg", color: "rgba(245, 158, 11, 0.1)", shadow: "rgba(245, 158, 11, 0.4)" },
+  { name: "MongoDB", bg: "/mongodb.svg", color: "rgba(168, 85, 247, 0.1)", shadow: "rgba(168, 85, 247, 0.4)" },
+  { name: "GitHub", bg: "/github.svg", color: "rgba(255, 255, 255, 0.05)", shadow: "rgba(255, 255, 255, 0.2)" },
 ];
 
 export default function CardStack() {
@@ -88,7 +88,7 @@ export default function CardStack() {
   }, []);
 
   return (
-    <section className="stack min-h-[80vh] bg-black">
+    <section className="stack min-h-[80vh] bg-transparent relative z-10">
       <div className="relative w-full flex justify-center pt-12">
         {/* pt-24 controls how far from top the cards sit */}
         {cards.map((card, i) => (
@@ -97,15 +97,14 @@ export default function CardStack() {
             ref={(el) => {
               if (el) cardsRef.current[i] = el;
             }}
-            className="absolute w-64 h-72 rounded-2xl shadow-2xl stack-card"
+            className="absolute w-64 h-72 rounded-2xl stack-card backdrop-blur-xl border border-white/20"
             style={{
               backgroundColor: card.color,
               backgroundImage: `url(${card.bg})`,
               backgroundRepeat: "no-repeat",
               backgroundPosition: "center",
               backgroundSize: "96px",
-              boxShadow:
-                "0 25px 60px rgba(255,255,255,0.18), 0 10px 30px rgba(0,0,0,0.35)",
+              boxShadow: `0 8px 32px 0 rgba(0, 0, 0, 0.37), 0 0 20px ${card.shadow}`,
               // Match GSAP's starting state to avoid an initial flash
               opacity: 0,
               transform: "translate3d(0, 240px, 0) rotate(0deg)",
