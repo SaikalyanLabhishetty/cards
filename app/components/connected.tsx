@@ -351,7 +351,7 @@ export default function Connected() {
             <path d="M8.5 13h7" strokeWidth="1.6" strokeLinecap="round" />
             <path d="M8.5 16h4" strokeWidth="1.6" strokeLinecap="round" />
           </svg>
-          DOWNLOAD LOGS
+          DOWNLOAD CV
         </a>
       </div>
 
