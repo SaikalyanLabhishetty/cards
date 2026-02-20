@@ -89,18 +89,10 @@ export default function Connected() {
     });
 
     sendTlRef.current
-      .to(letter, { y: 90, opacity: 0, duration: 0.3 }, 0)
-      .to(flap, { rotateX: 0, duration: 0.3 }, 0.05)
-      .set(envelope, {
-        clearProps: "background,clipPath,boxShadow",
-        width: 520,
-        height: 420,
-        borderRadius: "22px",
-        clipPath: "none",
-        boxShadow: "none",
-      })
-      .to(envelope, { x: toX, y: toY, scale: 0.2, rotation: -8, duration: 0.55 }, 0.15)
-      .to(overlay, { opacity: 0, duration: 0.35, ease: "power1.out" }, 0.72);
+      .to(letter, { y: 90, opacity: 0, duration: 0.55 }, 0)
+      .to(flap, { rotateX: 0, duration: 0.55 }, 0.2)
+      .to(envelope, { x: toX, y: toY, scale: 0.2, rotation: -8, duration: 0.8, ease: "power3.inOut" }, 0.3)
+      .to(overlay, { opacity: 0, duration: 0.25 }, 0.85);
   };
 
   useLayoutEffect(() => {
