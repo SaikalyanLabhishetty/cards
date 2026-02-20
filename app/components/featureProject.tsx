@@ -25,28 +25,13 @@ const projectCards = [
     to: "#a855f7",
     accent: "#ede9fe",
     image: "/projects/examportal.png",
-  },
-  {
-    title: "Automation Rail",
-    eyebrow: "Project 03",
-    body: "Third slot ready for content. Add a hero screenshot or diagram on the right side when assets are ready.",
-    from: "#0b1221",
-    to: "#f97316",
-    accent: "#fff7ed",
-  },
-  {
-    title: "Realtime CX",
-    eyebrow: "Case Study Slot 04",
-    body: "Fourth placeholder. Keep copy to 2-3 lines so the stack stays balanced and legible.",
-    from: "#0f172a",
-    to: "#22d3ee",
-    accent: "#ecfeff",
-  },
+  }
 ];
 
 export default function FeatureProject() {
   const sectionRef = useRef<HTMLElement | null>(null);
   const cardsRef = useRef<HTMLDivElement[]>([]);
+  const cardsStageRef = useRef<HTMLDivElement | null>(null);
   const copyRef = useRef<HTMLDivElement | null>(null);
 
   useLayoutEffect(() => {
@@ -81,22 +66,29 @@ export default function FeatureProject() {
         ease: "power2.out",
       });
 
+      const scrollDistance = Math.max(window.innerHeight * 1.9, cards.length * 900);
+      const leadIn = 0.7;
       const tl = gsap.timeline({
         defaults: { ease: "power2.out" },
         scrollTrigger: {
           trigger: sectionRef.current,
-          start: "top 75%",
-          end: "+=1700",
-          scrub: 1.2,
+          start: "top top",
+          end: `+=${scrollDistance}`,
+          scrub: 1.15,
+          pin: true,
+          pinSpacing: true,
+          anticipatePin: 1,
+          invalidateOnRefresh: true,
         },
       });
 
       cards.forEach((card, i) => {
-        const base = i * 0.55; // slower stagger so each card stays readable
-        // Hold the card in place for a moment as the section enters view
+        const base = leadIn + i * 2.4;
+        // Focus each card first, then fully clear it before the next card leads.
         tl.to(
           card,
           {
+            duration: 1.15,
             y: -12 - i * 12,
             rotate: 0,
             scale: 1 + i * 0.015,
@@ -106,16 +98,21 @@ export default function FeatureProject() {
           base,
         );
 
-        // Then send it upward and fade it out, one card after another
-        tl.to(
-          card,
-          {
-            y: -200 - i * 28,
-            opacity: 0.35,
-            ease: "power1.inOut",
-          },
-          base + 1.4,
-        );
+        // Then send it upward and fade it out, one card after another.
+        // Skip the last card so it stays visible as the section unpins.
+        if (i !== cards.length - 1) {
+          tl.to(
+            card,
+            {
+              duration: 1.4,
+              y: -260 - i * 24,
+              opacity: 0,
+              scale: 0.96,
+              ease: "power1.inOut",
+            },
+            base + 1.25,
+          );
+        }
       });
     }, sectionRef);
 
@@ -130,7 +127,7 @@ export default function FeatureProject() {
       <div className="absolute inset-0 pointer-events-none opacity-60 bg-[radial-gradient(circle_at_10%_20%,rgba(34,211,238,0.12),transparent_25%),radial-gradient(circle_at_80%_0%,rgba(168,85,247,0.18),transparent_28%),radial-gradient(circle_at_60%_80%,rgba(249,115,22,0.14),transparent_22%)]" />
 
       <div className="relative max-w-6xl mx-auto flex flex-col items-center gap-12">
-        <div ref={copyRef} className="space-y-4 text-center max-w-2xl mx-auto">
+        <div ref={copyRef} className="relative z-20 space-y-4 text-center max-w-2xl mx-auto">
           <p
             data-animate
             className="inline-flex items-center text-xs tracking-[0.35em] uppercase font-semibold text-gray-400"
@@ -141,11 +138,11 @@ export default function FeatureProject() {
             A collection of my best projects
           </h3>
           <p data-animate className="text-lg text-gray-200 leading-relaxed max-w-xl">
-            Here's a look at some of my favorite projects, each with a short description and a visual representation.
+            Here&apos;s a look at some of my favorite projects, each with a short description and a visual representation.
           </p>
         </div>
 
-        <div className="relative h-[600px] flex items-center justify-center w-full">
+        <div ref={cardsStageRef} className="relative z-10 h-[600px] flex items-center justify-center w-full">
           <div className="absolute inset-0 bg-gradient-to-br from-cyan-400/10 via-emerald-400/8 to-orange-400/8 blur-3xl" />
           <div className="relative h-full w-full flex items-center justify-center">
             {projectCards.map((card, i) => (
