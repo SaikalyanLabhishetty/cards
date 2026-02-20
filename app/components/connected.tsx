@@ -1,10 +1,16 @@
 "use client";
 
-import { useLayoutEffect, useRef, useState } from "react";
+import { type FormEvent, type MouseEvent, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { MotionPathPlugin } from "gsap/MotionPathPlugin";
 
 gsap.registerPlugin(MotionPathPlugin);
+
+type PortfolioContactPrefill = {
+  email?: string;
+  subject?: string;
+  message?: string;
+};
 
 export default function Connected() {
   const pathRef = useRef<SVGPathElement | null>(null);
@@ -24,15 +30,23 @@ export default function Connected() {
 
   const [postcardOpen, setPostcardOpen] = useState(false);
   const [closing, setClosing] = useState(false);
+  const [draftEmail, setDraftEmail] = useState("");
+  const [draftMessage, setDraftMessage] = useState("");
 
-  const handleOpenPostcard = (event: any) => {
-    event.preventDefault();
+  const openPostcard = useCallback(() => {
     if (closing) return;
     setClosing(false);
     setPostcardOpen(true);
+  }, [closing]);
+
+  const handleOpenPostcard = (event: MouseEvent<HTMLAnchorElement>) => {
+    event.preventDefault();
+    setDraftEmail("");
+    setDraftMessage("");
+    openPostcard();
   };
 
-  const handleSend = (event?: any) => {
+  const handleSend = (event?: FormEvent<HTMLFormElement>) => {
     event?.preventDefault();
     if (!postcardOpen || closing) return;
     setClosing(true);
@@ -50,6 +64,8 @@ export default function Connected() {
       onComplete: () => {
         setPostcardOpen(false);
         setClosing(false);
+        setDraftEmail("");
+        setDraftMessage("");
       },
     });
 
@@ -62,6 +78,27 @@ export default function Connected() {
       .to(successMessage, { opacity: 1, y: 0, scale: 1, duration: 0.25, ease: "power2.out" }, 0.3)
       .to(overlay, { opacity: 0, duration: 0.45, ease: "power1.out" }, 0.8);
   };
+
+  useEffect(() => {
+    const handler = (event: Event) => {
+      const detail = (event as CustomEvent<PortfolioContactPrefill>).detail;
+      if (!detail) return;
+
+      const nextEmail = typeof detail.email === "string" ? detail.email.trim() : "";
+      const nextSubject = typeof detail.subject === "string" ? detail.subject.trim() : "";
+      const nextMessage = typeof detail.message === "string" ? detail.message.trim() : "";
+      const payload = [nextSubject, nextMessage].filter(Boolean).join("\n\n");
+
+      setDraftEmail(nextEmail);
+      setDraftMessage(payload);
+      openPostcard();
+    };
+
+    window.addEventListener("portfolio:open-contact", handler as EventListener);
+    return () => {
+      window.removeEventListener("portfolio:open-contact", handler as EventListener);
+    };
+  }, [openPostcard]);
 
   const handleClose = () => {
     if (!postcardOpen || closing) return;
@@ -400,6 +437,8 @@ export default function Connected() {
                         type="email"
                         name="email"
                         required
+                        value={draftEmail}
+                        onChange={(event) => setDraftEmail(event.target.value)}
                         className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm shadow-inner focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-200"
                         placeholder="you@example.com"
                       />
@@ -411,6 +450,8 @@ export default function Connected() {
                         name="message"
                         required
                         rows={5}
+                        value={draftMessage}
+                        onChange={(event) => setDraftMessage(event.target.value)}
                         className="w-full resize-none rounded-lg border border-slate-200 px-3 py-2 text-sm shadow-inner focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-200"
                         placeholder="Tell me about your idea..."
                       />

@@ -46,7 +46,7 @@ export default function Experience() {
             }
 
             // Animate the text items
-            gsap.utils.toArray(".exp-item").forEach((item: any, i) => {
+            gsap.utils.toArray<HTMLElement>(".exp-item").forEach((item) => {
                 gsap.from(item, {
                     scrollTrigger: {
                         trigger: item,

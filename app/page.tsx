@@ -7,6 +7,7 @@ import About from "./components/about";
 import Experience from "./components/experience";
 import FeatureProject from "./components/featureProject";
 import Connected from "./components/connected";
+import AgenticChatbot from "./components/agenticChatbot";
 // import FeatureWork from "./components/featureWork";
 import AgenticBackground from "./components/agenticBackground";
 
@@ -16,14 +17,13 @@ function ScrambleText({ text, delay = 0 }: { text: string; delay?: number }) {
   const [displayText, setDisplayText] = useState(text.replace(/[A-Za-z0-9]/g, "_"));
 
   useEffect(() => {
-    let timeout: NodeJS.Timeout;
-    let frame: number;
+    let frame = 0;
 
-    timeout = setTimeout(() => {
+    const timeout = setTimeout(() => {
       let iteration = 0;
 
       const updateText = () => {
-        setDisplayText((prev) =>
+        setDisplayText(() =>
           text
             .split("")
             .map((letter, index) => {
@@ -84,7 +84,7 @@ export default function Home() {
   }, [subtitle]);
 
   return (
-    <main className="relative text-white min-h-screen">
+    <main id="top" className="relative text-white min-h-screen">
       <AgenticBackground />
       <section className="min-h-screen flex items-center justify-center">
         {/* CENTERED GROUP */}
@@ -114,12 +114,21 @@ export default function Home() {
         </div>
       </section>
       <div className="relative z-10">
-        <About />
-        <Experience />
-        <FeatureProject />
+        <div id="about">
+          <About />
+        </div>
+        <div id="experience">
+          <Experience />
+        </div>
+        <div id="projects">
+          <FeatureProject />
+        </div>
         {/* <FeatureWork /> */}
-        <Connected />
+        <div id="connect">
+          <Connected />
+        </div>
       </div>
+      <AgenticChatbot />
     </main>
   );
 }
