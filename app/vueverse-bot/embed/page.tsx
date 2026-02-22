@@ -12,7 +12,7 @@ export default function VueverseBotEmbedPage() {
   }, []);
 
   return (
-    <main className="h-dvh w-full bg-[#05070f] p-0 text-white">
+    <main className="h-dvh w-full bg-white p-0 text-[#163326]">
       <VueverseChatbot embedded onRequestClose={requestClose} />
     </main>
   );

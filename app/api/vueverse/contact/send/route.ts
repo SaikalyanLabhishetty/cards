@@ -47,6 +47,11 @@ function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
+function extractEmail(input: string) {
+  const match = input.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i);
+  return match ? match[0] : "";
+}
+
 function escapeHtml(input: string) {
   return input
     .replaceAll("&", "&amp;")
@@ -90,9 +95,10 @@ export async function POST(request: Request) {
 
   const payload = isRecord(payloadRaw) ? (payloadRaw as ContactPayload) : {};
   const name = readString(payload.name);
-  const email = readString(payload.email);
+  const emailInput = readString(payload.email);
   const subject = readString(payload.subject);
   const message = readString(payload.message);
+  const email = extractEmail(emailInput) || emailInput;
 
   if (!email || !message) {
     return NextResponse.json(
@@ -113,18 +119,11 @@ export async function POST(request: Request) {
   }
 
   const smtpHost = readString(process.env.SMTP_HOST);
-  const smtpPort = Number(
-    readString(process.env.SMTP_PORT) || "587",
-  );
-  const smtpUser =
-    readString(process.env.VUEVERSE_SMTP_USER) 
-  const smtpPass =
-    readString(process.env.VUEVERSE_SMTP_PASS) 
+  const smtpPort = Number(readString(process.env.SMTP_PORT) || "587");
+  const smtpUser = readString(process.env.VUEVERSE_SMTP_USER);
+  const smtpPass = readString(process.env.VUEVERSE_SMTP_PASS);
   const smtpSecureFlag = readString(process.env.SMTP_SECURE);
-  const smtpFromEmail =
-    readString(process.env.VUEVERSE_SMTP_FROM_EMAIL) || smtpUser
-  const contactReceiver =
-    readString(process.env.VUEVERSE_CONTACT_RECEIVER_EMAIL) 
+  const contactReceiver = readString(process.env.VUEVERSE_CONTACT_RECEIVER_EMAIL);
 
   const contactTeamName = "Vueverse team";
 
@@ -132,8 +131,15 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         error:
-          "Mail service is not configured. Set SMTP_HOST, SMTP_PORT, and either VUEVERSE_SMTP_USER/VUEVERSE_SMTP_PASS or SMTP_USER/SMTP_PASS.",
+          "Mail service is not configured. Set SMTP_HOST, SMTP_PORT, VUEVERSE_SMTP_USER, and VUEVERSE_SMTP_PASS.",
       },
+      { status: 500 },
+    );
+  }
+
+  if (!contactReceiver) {
+    return NextResponse.json(
+      { error: "Contact receiver is not configured. Set VUEVERSE_CONTACT_RECEIVER_EMAIL." },
       { status: 500 },
     );
   }
@@ -189,7 +195,7 @@ export async function POST(request: Request) {
 
   try {
     await transport.sendMail({
-      from: smtpFromEmail,
+      from: email,
       sender: smtpUser,
       to: contactReceiver,
       replyTo: email,

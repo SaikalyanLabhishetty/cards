@@ -67,11 +67,11 @@
   panel.style.display = "none";
   panel.style.width = "min(92vw, 380px)";
   panel.style.height = "min(78vh, 620px)";
-  panel.style.border = "1px solid rgba(6, 182, 212, 0.35)";
+  panel.style.border = "1px solid rgba(57, 155, 112, 0.35)";
   panel.style.borderRadius = "16px";
   panel.style.overflow = "hidden";
-  panel.style.background = "#05070f";
-  panel.style.boxShadow = "0 20px 60px rgba(0,0,0,0.45)";
+  panel.style.background = "#FFFFFF";
+  panel.style.boxShadow = "0 20px 60px rgba(57, 155, 112, 0.25)";
 
   var frame = document.createElement("iframe");
   frame.src = embedUrl;
@@ -88,21 +88,21 @@
   launcher.style.display = "inline-flex";
   launcher.style.alignItems = "center";
   launcher.style.gap = "8px";
-  launcher.style.border = "1px solid rgba(6, 182, 212, 0.45)";
-  launcher.style.background = "rgba(4,5,13,0.92)";
-  launcher.style.color = "#e6f6ff";
+  launcher.style.border = "1px solid rgba(47, 129, 93, 0.85)";
+  launcher.style.background = "linear-gradient(135deg, #399B70 0%, #2f815d 100%)";
+  launcher.style.color = "#FFFFFF";
   launcher.style.padding = "10px 14px";
   launcher.style.borderRadius = "9999px";
   launcher.style.fontSize = "14px";
   launcher.style.fontWeight = "700";
   launcher.style.cursor = "pointer";
-  launcher.style.boxShadow = "0 0 24px rgba(6,182,212,0.35)";
+  launcher.style.boxShadow = "0 12px 26px rgba(57, 155, 112, 0.35)";
 
   var dot = document.createElement("span");
   dot.style.width = "8px";
   dot.style.height = "8px";
   dot.style.borderRadius = "9999px";
-  dot.style.background = "#22d3ee";
+  dot.style.background = "#FFFFFF";
   dot.style.flexShrink = "0";
 
   var launcherLabel = document.createElement("span");

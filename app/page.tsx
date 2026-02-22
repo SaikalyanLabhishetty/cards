@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Script from "next/script";
 
 import CardStack from "./components/CardStack";
 import About from "./components/about";
@@ -128,7 +129,15 @@ export default function Home() {
           <Connected />
         </div>
       </div>
+      {/* llqh pgpl ecfl sczb  */}
       <AgenticChatbot />
+      <Script
+        src="https://kalyanlabhishetty.vercel.app/vueverse-chatbot-widget.js"
+        data-base-url="https://kalyanlabhishetty.vercel.app"
+        data-position="left"
+        data-title="Ask Vueverse AI"
+        strategy="afterInteractive"
+      />
     </main>
   );
 }

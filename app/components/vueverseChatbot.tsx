@@ -77,6 +77,11 @@ function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
+function extractEmail(input: string) {
+  const match = input.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i);
+  return match ? match[0] : "";
+}
+
 function detectContactIntent(userQuestion: string) {
   const text = userQuestion.toLowerCase();
   return /(hire|hiring|quote|proposal|contact|consult|consulting|project|build|work together|collaborat|pricing|send (a )?(mail|email|message)|email|mail)/.test(
@@ -340,7 +345,9 @@ export default function VueverseChatbot({
     }
 
     if (contactStep === "email") {
-      if (!isValidEmail(userInput)) {
+      const parsedEmail = extractEmail(userInput) || userInput;
+
+      if (!isValidEmail(parsedEmail)) {
         pushMessage(
           "assistant",
           "Please enter a valid email address, or type `cancel` to stop contact setup.",
@@ -348,7 +355,7 @@ export default function VueverseChatbot({
         return;
       }
 
-      setContactDraft((previous) => ({ ...previous, email: userInput }));
+      setContactDraft((previous) => ({ ...previous, email: parsedEmail }));
       setContactStep("description");
       pushMessage("assistant", "Got it. Briefly describe your requirement.");
       return;
@@ -476,17 +483,17 @@ export default function VueverseChatbot({
     <div
       className={
         embedded
-          ? "h-full w-full text-white"
-          : "fixed bottom-4 right-4 z-[80] w-[min(92vw,380px)] text-white"
+          ? "h-full w-full text-[#163326]"
+          : "fixed bottom-4 right-4 z-[80] w-[min(92vw,380px)] text-[#163326]"
       }
     >
       {!embedded && !open && (
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="ml-auto flex items-center gap-2 rounded-full border border-cyan-400/40 bg-[#04050d]/90 px-4 py-2 text-sm font-semibold shadow-[0_0_22px_rgba(6,182,212,0.35)] hover:border-cyan-300 hover:shadow-[0_0_30px_rgba(6,182,212,0.55)]"
+          className="ml-auto flex items-center gap-2 rounded-full border border-[#2f815d]/70 bg-gradient-to-r from-[#399B70] to-[#2f815d] px-4 py-2 text-sm font-semibold text-white shadow-[0_12px_26px_rgba(57,155,112,0.35)] hover:brightness-105"
         >
-          <span className="h-2 w-2 rounded-full bg-cyan-400" />
+          <span className="h-2 w-2 rounded-full bg-white/90" />
           Vueverse AI
         </button>
       )}
@@ -495,21 +502,21 @@ export default function VueverseChatbot({
         <div
           className={
             embedded
-              ? "flex h-full flex-col overflow-hidden border border-cyan-500/30 bg-[#05070f]/95 shadow-[0_20px_60px_rgba(0,0,0,0.5)]"
-              : "overflow-hidden rounded-2xl border border-cyan-500/30 bg-[#05070f]/95 shadow-[0_20px_60px_rgba(0,0,0,0.5)]"
+              ? "flex h-full flex-col overflow-hidden border border-[#399B70]/35 bg-white shadow-[0_18px_50px_rgba(57,155,112,0.2)]"
+              : "overflow-hidden rounded-2xl border border-[#399B70]/35 bg-white shadow-[0_18px_50px_rgba(57,155,112,0.2)]"
           }
         >
-          <div className="flex items-center justify-between border-b border-cyan-500/20 bg-gradient-to-r from-cyan-500/20 via-blue-500/15 to-purple-500/20 px-4 py-3">
+          <div className="flex items-center justify-between border-b border-[#399B70]/20 bg-gradient-to-r from-white via-[#f2fbf6] to-[#e7f6ee] px-4 py-3">
             <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-cyan-300">
+              <p className="text-xs uppercase tracking-[0.2em] text-[#2f815d]">
                 {VUEVERSE_SITE_NAME} Assistant
               </p>
-              <p className="text-sm text-gray-200">Answers + Intent-Based Actions</p>
+              <p className="text-sm text-[#356a54]">Answers + Intent-Based Actions</p>
             </div>
             <button
               type="button"
               onClick={handleClose}
-              className="rounded border border-white/20 px-2 py-1 text-xs text-gray-200 hover:border-white/40"
+              className="rounded border border-[#399B70]/30 px-2 py-1 text-xs text-[#2f815d] hover:border-[#399B70]/60 hover:bg-[#e9f6ef]"
               aria-label="Close AI assistant"
             >
               Close
@@ -528,12 +535,12 @@ export default function VueverseChatbot({
                 key={message.id}
                 className={
                   message.role === "user"
-                    ? "ml-8 rounded-xl border border-cyan-500/35 bg-cyan-500/10 px-3 py-2"
+                    ? "ml-8 rounded-xl border border-[#399B70]/45 bg-[#e7f6ee] px-3 py-2 text-[#153527]"
                     : message.role === "action"
-                      ? "rounded-xl border border-purple-500/35 bg-purple-500/10 px-3 py-2 text-purple-100"
+                      ? "rounded-xl border border-[#399B70]/30 bg-[#f3fbf7] px-3 py-2 text-[#1f5a41]"
                       : message.role === "error"
-                        ? "rounded-xl border border-red-500/40 bg-red-500/10 px-3 py-2 text-red-200"
-                        : "mr-8 rounded-xl border border-white/15 bg-white/5 px-3 py-2"
+                        ? "rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-red-700"
+                        : "mr-8 rounded-xl border border-[#399B70]/20 bg-white px-3 py-2 text-[#163326]"
                 }
               >
                 {message.content}
@@ -541,21 +548,21 @@ export default function VueverseChatbot({
             ))}
 
             {sending && (
-              <div className="text-xs uppercase tracking-[0.16em] text-cyan-300">
+              <div className="text-xs uppercase tracking-[0.16em] text-[#2f815d]">
                 Thinking...
               </div>
             )}
             <div ref={endRef} />
           </div>
 
-          <div className="overflow-x-auto border-t border-cyan-500/20 px-4 py-2">
+          <div className="overflow-x-auto border-t border-[#399B70]/20 px-4 py-2">
             <div className="inline-flex min-w-max gap-2 whitespace-nowrap">
               <button
                 type="button"
                 onClick={() => {
                   void runQuickAction("schedule");
                 }}
-                className="rounded-full border border-cyan-400/50 bg-cyan-500/15 px-3 py-1 text-xs font-semibold text-cyan-100 hover:bg-cyan-500/30"
+                className="rounded-full border border-[#399B70]/45 bg-[#e9f6ef] px-3 py-1 text-xs font-semibold text-[#2f815d] hover:bg-[#dff2e8]"
               >
                 Schedule a Meeting
               </button>
@@ -564,7 +571,7 @@ export default function VueverseChatbot({
                 onClick={() => {
                   void runQuickAction("contact");
                 }}
-                className="rounded-full border border-emerald-400/50 bg-emerald-500/15 px-3 py-1 text-xs font-semibold text-emerald-100 hover:bg-emerald-500/30"
+                className="rounded-full border border-[#2f815d]/60 bg-gradient-to-r from-[#399B70] to-[#2f815d] px-3 py-1 text-xs font-semibold text-white hover:brightness-105"
               >
                 Send a Message
               </button>
@@ -573,25 +580,25 @@ export default function VueverseChatbot({
                 onClick={() => {
                   void runQuickAction("overview");
                 }}
-                className="rounded-full border border-purple-400/50 bg-purple-500/15 px-3 py-1 text-xs font-semibold text-purple-100 hover:bg-purple-500/30"
+                className="rounded-full border border-[#399B70]/45 bg-[#f3fbf7] px-3 py-1 text-xs font-semibold text-[#2f815d] hover:bg-[#e9f6ef]"
               >
                 Learn About {VUEVERSE_SITE_NAME}
               </button>
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="border-t border-cyan-500/20 p-3">
+          <form onSubmit={handleSubmit} className="border-t border-[#399B70]/20 p-3">
             <div className="flex gap-2">
               <input
                 value={input}
                 onChange={(event) => setInput(event.target.value)}
                 placeholder={`Ask about ${VUEVERSE_SITE_NAME}, meeting, or contact`}
-                className="w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-sm text-white outline-none placeholder:text-gray-500 focus:border-cyan-400"
+                className="w-full rounded-lg border border-[#399B70]/30 bg-white px-3 py-2 text-sm text-[#163326] outline-none placeholder:text-[#6f8f80] focus:border-[#399B70]"
               />
               <button
                 type="submit"
                 disabled={sending}
-                className="rounded-lg border border-cyan-400/50 bg-cyan-500/20 px-3 py-2 text-sm font-semibold text-cyan-100 hover:bg-cyan-500/35 disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-lg border border-[#2f815d] bg-[#399B70] px-3 py-2 text-sm font-semibold text-white hover:bg-[#2f815d] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Send
               </button>
