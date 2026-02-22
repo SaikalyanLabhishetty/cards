@@ -2,6 +2,7 @@
   var ROOT_ID = "vueverse-chatbot-widget-root";
   var CLOSE_EVENT = "vueverse-chatbot:close-request";
   var GLOBAL_FLAG = "__vueverseChatbotWidgetLoaded";
+  var STYLE_ID = "vueverse-chatbot-widget-style";
 
   if (window[GLOBAL_FLAG]) {
     return;
@@ -44,6 +45,14 @@
 
   if (document.getElementById(ROOT_ID)) {
     return;
+  }
+
+  if (!document.getElementById(STYLE_ID)) {
+    var style = document.createElement("style");
+    style.id = STYLE_ID;
+    style.textContent =
+      "@keyframes vueverseChatbotDotBlink{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.25;transform:scale(.8)}}";
+    document.head.appendChild(style);
   }
 
   var position = requestedPosition === "left" ? "left" : "right";
@@ -104,6 +113,7 @@
   dot.style.borderRadius = "9999px";
   dot.style.background = "#FFFFFF";
   dot.style.flexShrink = "0";
+  dot.style.animation = "vueverseChatbotDotBlink 1.1s ease-in-out infinite";
 
   var launcherLabel = document.createElement("span");
   launcherLabel.textContent = title;

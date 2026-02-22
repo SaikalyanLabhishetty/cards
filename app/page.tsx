@@ -132,7 +132,7 @@ export default function Home() {
       {/* llqh pgpl ecfl sczb  */}
       <AgenticChatbot />
       <Script
-        src="https://kalyanlabhishetty.vercel.app/vueverse-chatbot-widget.js"
+        src="https://kalyanlabhishetty.vercel.app/vueverse-chatbot-widget.js?v=20260223-1"
         data-base-url="https://kalyanlabhishetty.vercel.app"
         data-position="left"
         data-title="Ask Vueverse AI"

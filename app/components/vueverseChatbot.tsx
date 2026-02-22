@@ -493,7 +493,7 @@ export default function VueverseChatbot({
           onClick={() => setOpen(true)}
           className="ml-auto flex items-center gap-2 rounded-full border border-[#2f815d]/70 bg-gradient-to-r from-[#399B70] to-[#2f815d] px-4 py-2 text-sm font-semibold text-white shadow-[0_12px_26px_rgba(57,155,112,0.35)] hover:brightness-105"
         >
-          <span className="h-2 w-2 rounded-full bg-white/90" />
+          <span className="h-2 w-2 rounded-full bg-white/90 animate-pulse" />
           Vueverse AI
         </button>
       )}
@@ -562,7 +562,7 @@ export default function VueverseChatbot({
                 onClick={() => {
                   void runQuickAction("schedule");
                 }}
-                className="rounded-full border border-[#399B70]/45 bg-[#e9f6ef] px-3 py-1 text-xs font-semibold text-[#2f815d] hover:bg-[#dff2e8]"
+                className="rounded-full border border-[#2f815d]/60 bg-gradient-to-r from-[#399B70] to-[#2f815d] px-3 py-1 text-xs font-semibold text-white hover:brightness-105"
               >
                 Schedule a Meeting
               </button>
@@ -580,7 +580,7 @@ export default function VueverseChatbot({
                 onClick={() => {
                   void runQuickAction("overview");
                 }}
-                className="rounded-full border border-[#399B70]/45 bg-[#f3fbf7] px-3 py-1 text-xs font-semibold text-[#2f815d] hover:bg-[#e9f6ef]"
+                className="rounded-full border border-[#2f815d]/60 bg-gradient-to-r from-[#399B70] to-[#2f815d] px-3 py-1 text-xs font-semibold text-white hover:brightness-105"
               >
                 Learn About {VUEVERSE_SITE_NAME}
               </button>
