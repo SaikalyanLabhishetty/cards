@@ -10,6 +10,31 @@ type ContactPayload = {
   message?: unknown;
 };
 
+type MailTransport = {
+  verify: () => Promise<unknown>;
+  sendMail: (mail: {
+    from: string;
+    sender?: string;
+    to: string;
+    replyTo: string;
+    subject: string;
+    text: string;
+    html: string;
+  }) => Promise<unknown>;
+};
+
+type NodemailerLike = {
+  createTransport: (config: {
+    host: string;
+    port: number;
+    secure: boolean;
+    auth: {
+      user: string;
+      pass: string;
+    };
+  }) => MailTransport;
+};
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -31,25 +56,28 @@ function escapeHtml(input: string) {
     .replaceAll("'", "&#39;");
 }
 
-function extractErrorMessage(input: unknown) {
-  if (!isRecord(input)) {
-    return "";
-  }
+async function loadNodemailer(): Promise<NodemailerLike | null> {
+  try {
+    const moduleName = "nodemailer";
+    const imported = (await import(moduleName)) as unknown;
 
-  const directMessage = input.message;
-  if (typeof directMessage === "string" && directMessage.trim()) {
-    return directMessage.trim();
-  }
-
-  const nestedError = input.error;
-  if (isRecord(nestedError)) {
-    const nestedMessage = nestedError.message;
-    if (typeof nestedMessage === "string" && nestedMessage.trim()) {
-      return nestedMessage.trim();
+    if (!isRecord(imported)) {
+      return null;
     }
-  }
 
-  return "";
+    const source = isRecord(imported.default) ? imported.default : imported;
+    const createTransport = source.createTransport;
+
+    if (typeof createTransport !== "function") {
+      return null;
+    }
+
+    return {
+      createTransport: createTransport as NodemailerLike["createTransport"],
+    };
+  } catch {
+    return null;
+  }
 }
 
 export async function POST(request: Request) {
@@ -84,29 +112,57 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Message is too long." }, { status: 400 });
   }
 
-  const resendApiKey =
-    readString(process.env.VUEVERSE_RESEND_API_KEY) ||
-    readString(process.env.RESEND_API_KEY);
-  const resendFromEmail =
-    readString(process.env.VUEVERSE_RESEND_FROM_EMAIL) ||
-    readString(process.env.RESEND_FROM_EMAIL);
-  const resendApiUrl =
-    readString(process.env.VUEVERSE_RESEND_API_URL) ||
-    "https://api.resend.com/emails";
+  const smtpHost = readString(process.env.SMTP_HOST);
+  const smtpPort = Number(
+    readString(process.env.SMTP_PORT) || "587",
+  );
+  const smtpUser =
+    readString(process.env.VUEVERSE_SMTP_USER) 
+  const smtpPass =
+    readString(process.env.VUEVERSE_SMTP_PASS) 
+  const smtpSecureFlag = readString(process.env.SMTP_SECURE);
+  const smtpFromEmail =
+    readString(process.env.VUEVERSE_SMTP_FROM_EMAIL) || smtpUser
   const contactReceiver =
-    readString(process.env.VUEVERSE_CONTACT_RECEIVER_EMAIL) ||
-    readString(process.env.CONTACT_RECEIVER_EMAIL);
+    readString(process.env.VUEVERSE_CONTACT_RECEIVER_EMAIL) 
 
   const contactTeamName = "Vueverse team";
 
-  if (!resendApiKey || !resendFromEmail || !contactReceiver) {
+  if (!smtpHost || !smtpUser || !smtpPass || Number.isNaN(smtpPort)) {
     return NextResponse.json(
       {
         error:
-          "Resend is not configured. Set VUEVERSE_RESEND_API_KEY, VUEVERSE_RESEND_FROM_EMAIL, and VUEVERSE_CONTACT_RECEIVER_EMAIL.",
+          "Mail service is not configured. Set SMTP_HOST, SMTP_PORT, and either VUEVERSE_SMTP_USER/VUEVERSE_SMTP_PASS or SMTP_USER/SMTP_PASS.",
       },
       { status: 500 },
     );
+  }
+
+  const nodemailer = await loadNodemailer();
+  if (!nodemailer) {
+    return NextResponse.json(
+      {
+        error: "Nodemailer is not installed. Add nodemailer dependency and redeploy.",
+      },
+      { status: 500 },
+    );
+  }
+
+  const secure = smtpSecureFlag === "true" || smtpPort === 465;
+  const transport = nodemailer.createTransport({
+    host: smtpHost,
+    port: smtpPort,
+    secure,
+    auth: {
+      user: smtpUser,
+      pass: smtpPass,
+    },
+  });
+
+  try {
+    await transport.verify();
+  } catch {
+    return NextResponse.json({ error: "SMTP verification failed." }, { status: 500 });
   }
 
   const normalizedSubject = subject || `Vueverse chatbot message from ${name || email}`;
@@ -131,44 +187,18 @@ export async function POST(request: Request) {
     <p>${escapeHtml(message).replaceAll("\n", "<br />")}</p>
   `;
 
-  let resendResponse: Response;
   try {
-    resendResponse = await fetch(resendApiUrl, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${resendApiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from: resendFromEmail,
-        to: [contactReceiver],
-        reply_to: email,
-        subject: normalizedSubject,
-        text,
-        html,
-      }),
+    await transport.sendMail({
+      from: smtpFromEmail,
+      sender: smtpUser,
+      to: contactReceiver,
+      replyTo: email,
+      subject: normalizedSubject,
+      text,
+      html,
     });
   } catch {
-    return NextResponse.json(
-      { error: "Failed to reach Resend API." },
-      { status: 502 },
-    );
-  }
-
-  if (!resendResponse.ok) {
-    let errorMessage = "";
-
-    try {
-      const data = (await resendResponse.json()) as unknown;
-      errorMessage = extractErrorMessage(data);
-    } catch {
-      errorMessage = "";
-    }
-
-    return NextResponse.json(
-      { error: errorMessage || "Resend failed to send email." },
-      { status: resendResponse.status || 502 },
-    );
+    return NextResponse.json({ error: "Failed to send email." }, { status: 500 });
   }
 
   return NextResponse.json({
