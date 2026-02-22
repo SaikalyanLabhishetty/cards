@@ -33,6 +33,14 @@ type SendMailApiResponse = {
   error?: string;
 };
 
+type ContactStep = "idle" | "name" | "email" | "description";
+
+type ContactDraft = {
+  name: string;
+  email: string;
+  description: string;
+};
+
 const linkLabels: Record<PortfolioLinkTarget, string> = {
   linkedin: "LinkedIn",
   github: "GitHub",
@@ -57,19 +65,69 @@ function isPortfolioLinkTarget(value: string): value is PortfolioLinkTarget {
   return Object.prototype.hasOwnProperty.call(PORTFOLIO_LINKS, value);
 }
 
-function hasActionIntent(userQuestion: string, toolName: string) {
+function isValidEmail(email: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function detectHireIntent(userQuestion: string) {
   const text = userQuestion.toLowerCase();
+  return /(hire|hiring|opportunity|position|role|collaborate|collaboration|work together|join our team|freelance|contract|consulting)/.test(
+    text,
+  );
+}
+
+function detectCancelFlowIntent(userQuestion: string) {
+  const text = userQuestion.toLowerCase();
+  return /(cancel|stop|skip|exit|not now|later|back|never mind)/.test(text);
+}
+
+function detectScheduleIntent(userQuestion: string) {
+  const text = userQuestion.toLowerCase();
+  return /(schedule|meeting|book|call|appointment|calendly)/.test(text);
+}
+
+function detectKnowledgeIntent(userQuestion: string) {
+  const text = userQuestion.toLowerCase();
+  return /(project|projects|experience|skills|stack|github|about|portfolio|work|background)/.test(text);
+}
+
+function hasActionIntent(userQuestion: string, toolCall: ToolCall) {
+  const text = userQuestion.toLowerCase();
+  const toolName = toolCall.name;
 
   if (toolName === "send_message") {
-    return /(send|mail|email|message|contact|reach)/.test(text);
+    return true;
   }
 
   if (toolName === "schedule_meeting") {
-    return /(schedule|meeting|book|call|appointment|calendly)/.test(text);
+    return true;
   }
 
   if (toolName === "open_link") {
-    return /(open|show|visit|go to|linkedin|github|resume|calendly)/.test(text);
+    const target = readString(toolCall.args, "target").toLowerCase();
+    const genericLinkIntent = /(open|show|visit|go to|link|profile|share|where)/.test(text);
+
+    if (genericLinkIntent) {
+      return true;
+    }
+
+    if (target === "linkedin") {
+      return /(linkedin|linked in|profile)/.test(text);
+    }
+
+    if (target === "github") {
+      return /(github|git hub|repo|repositories|code)/.test(text);
+    }
+
+    if (target === "resume") {
+      return /(resume|cv)/.test(text);
+    }
+
+    if (target === "calendly") {
+      return /(calendly|schedule|meeting|book)/.test(text);
+    }
+
+    return false;
   }
 
   return true;
@@ -79,12 +137,18 @@ export default function AgenticChatbot() {
   const [open, setOpen] = useState(false);
   const [sending, setSending] = useState(false);
   const [input, setInput] = useState("");
+  const [contactStep, setContactStep] = useState<ContactStep>("idle");
+  const [contactDraft, setContactDraft] = useState<ContactDraft>({
+    name: "",
+    email: "",
+    description: "",
+  });
   const [messages, setMessages] = useState<UiMessage[]>([
     {
       id: makeId(),
       role: "assistant",
       content:
-        "Hi, I am Kalyan's AI assistant. I explain projects and experience in chat. I execute schedule/send/open actions when your intent is clear.",
+        "Hi, I am Kalyan's AI assistant. I explain projects and experience in chat, and can help you know more about me and contact quickly.",
     },
   ]);
 
@@ -105,6 +169,15 @@ export default function AgenticChatbot() {
 
   const pushMessage = (role: UiRole, content: string) => {
     setMessages((previous) => [...previous, { id: makeId(), role, content }]);
+  };
+
+  const startContactFlow = () => {
+    setContactDraft({ name: "", email: "", description: "" });
+    setContactStep("name");
+    pushMessage(
+      "assistant",
+      "Great, happy to help you contact Kalyan. First, what is your name?",
+    );
   };
 
   const executeToolCall = async (toolCall: ToolCall): Promise<string> => {
@@ -196,16 +269,8 @@ export default function AgenticChatbot() {
     }
   };
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    const question = input.trim();
-    if (!question || sending) return;
-
+  const sendToAgent = async (question: string) => {
     const nextConversation = [...conversationForApi, { role: "user", content: question }];
-
-    setInput("");
-    pushMessage("user", question);
     setSending(true);
 
     try {
@@ -230,7 +295,7 @@ export default function AgenticChatbot() {
 
       if (Array.isArray(data.toolCalls) && data.toolCalls.length > 0) {
         for (const toolCall of data.toolCalls) {
-          if (!hasActionIntent(question, toolCall.name)) {
+          if (!hasActionIntent(question, toolCall)) {
             pushMessage("action", `Skipped ${toolCall.name}: no explicit action intent detected.`);
             continue;
           }
@@ -249,6 +314,140 @@ export default function AgenticChatbot() {
     } finally {
       setSending(false);
     }
+  };
+
+  const handleContactStepInput = async (userInput: string) => {
+    if (contactStep === "name") {
+      setContactDraft((previous) => ({ ...previous, name: userInput }));
+      setContactStep("email");
+      pushMessage("assistant", "Thanks. Please share your email address.");
+      return;
+    }
+
+    if (contactStep === "email") {
+      if (!isValidEmail(userInput)) {
+        pushMessage(
+          "assistant",
+          "Please enter a valid email address, or type `cancel` to stop contact setup.",
+        );
+        return;
+      }
+
+      setContactDraft((previous) => ({ ...previous, email: userInput }));
+      setContactStep("description");
+      pushMessage(
+        "assistant",
+        "Got it. Briefly describe why you want to contact/hire Kalyan.",
+      );
+      return;
+    }
+
+    if (contactStep === "description") {
+      const finalDraft = {
+        ...contactDraft,
+        description: userInput,
+      };
+
+      setContactDraft(finalDraft);
+      setContactStep("idle");
+      setSending(true);
+
+      const status = await executeToolCall({
+        name: "send_message",
+        args: {
+          name: finalDraft.name,
+          email: finalDraft.email,
+          subject: `Hiring inquiry from ${finalDraft.name}`,
+          message: finalDraft.description,
+        },
+      });
+
+      pushMessage("action", status);
+      pushMessage("assistant", "If you want, tap `Schedule a Meeting` to book time instantly.");
+      setSending(false);
+    }
+  };
+
+  const runQuickAction = async (action: "schedule" | "email" | "projects") => {
+    if (sending) return;
+
+    if (action === "schedule") {
+      pushMessage("user", "Schedule a meeting");
+      setSending(true);
+      const status = await executeToolCall({
+        name: "schedule_meeting",
+        args: {
+          name: contactDraft.name,
+          email: contactDraft.email,
+        },
+      });
+      pushMessage("action", status);
+      setSending(false);
+      return;
+    }
+
+    if (action === "email") {
+      pushMessage("user", "I want to contact Kalyan");
+      startContactFlow();
+      return;
+    }
+
+    const projectPrompt = "Tell me about Kalyan's key projects and GitHub work.";
+    pushMessage("user", "Learn about projects");
+    await sendToAgent(projectPrompt);
+  };
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const question = input.trim();
+    if (!question || sending) return;
+
+    setInput("");
+    pushMessage("user", question);
+
+    if (contactStep !== "idle") {
+      if (detectCancelFlowIntent(question)) {
+        setContactStep("idle");
+        pushMessage("assistant", "No problem. I cancelled contact setup. Ask me anything.");
+        return;
+      }
+
+      if (detectKnowledgeIntent(question)) {
+        setContactStep("idle");
+        pushMessage(
+          "assistant",
+          "Sure, I paused contact setup. Here are details on that:",
+        );
+        await sendToAgent(question);
+        return;
+      }
+
+      if (detectScheduleIntent(question)) {
+        setContactStep("idle");
+        setSending(true);
+        const status = await executeToolCall({
+          name: "schedule_meeting",
+          args: {
+            name: contactDraft.name,
+            email: contactDraft.email,
+          },
+        });
+        pushMessage("action", status);
+        setSending(false);
+        return;
+      }
+
+      await handleContactStepInput(question);
+      return;
+    }
+
+    if (detectHireIntent(question)) {
+      startContactFlow();
+      return;
+    }
+
+    await sendToAgent(question);
   };
 
   return (
@@ -301,6 +500,38 @@ export default function AgenticChatbot() {
 
             {sending && <div className="text-xs uppercase tracking-[0.16em] text-cyan-300">Thinking...</div>}
             <div ref={endRef} />
+          </div>
+
+          <div className="overflow-x-auto border-t border-cyan-500/20 px-4 py-2">
+            <div className="inline-flex min-w-max gap-2 whitespace-nowrap">
+              <button
+                type="button"
+                onClick={() => {
+                  void runQuickAction("schedule");
+                }}
+                className="rounded-full border border-cyan-400/50 bg-cyan-500/15 px-3 py-1 text-xs font-semibold text-cyan-100 hover:bg-cyan-500/30"
+              >
+                Schedule a Meeting
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  void runQuickAction("email");
+                }}
+                className="rounded-full border border-emerald-400/50 bg-emerald-500/15 px-3 py-1 text-xs font-semibold text-emerald-100 hover:bg-emerald-500/30"
+              >
+                Send an Email
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  void runQuickAction("projects");
+                }}
+                className="rounded-full border border-purple-400/50 bg-purple-500/15 px-3 py-1 text-xs font-semibold text-purple-100 hover:bg-purple-500/30"
+              >
+                Learn About Projects
+              </button>
+            </div>
           </div>
 
           <form onSubmit={handleSubmit} className="border-t border-cyan-500/20 p-3">
