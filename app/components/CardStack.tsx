@@ -28,13 +28,21 @@ export default function CardStack() {
     const ctx = gsap.context(() => {
       const viewportWidth = window.innerWidth;
       const isMobile = viewportWidth < 768;
-      const cardWidth = Math.min(256, Math.max(112, viewportWidth * 0.28));
-      const cardHeight = Math.min(288, Math.max(140, viewportWidth * 0.36));
-      const spacing = Math.min(isMobile ? 74 : 180, cardWidth * (isMobile ? 0.56 : 0.7));
-      const curveDepth = Math.min(isMobile ? 36 : 60, cardHeight * (isMobile ? 0.2 : 0.22));
-      const rotateDeg = isMobile ? 10 : 8;
-      const dropY = isMobile ? 180 : 240;
-      const scrollDistance = isMobile ? 320 : 400;
+      const cardWidth = isMobile
+        ? Math.min(112, Math.max(84, viewportWidth * 0.24))
+        : Math.min(256, Math.max(112, viewportWidth * 0.28));
+      const cardHeight = isMobile
+        ? Math.min(148, Math.max(108, viewportWidth * 0.3))
+        : Math.min(288, Math.max(140, viewportWidth * 0.36));
+      const spacing = isMobile
+        ? Math.min(40, cardWidth * 0.38)
+        : Math.min(180, cardWidth * 0.7);
+      const curveDepth = isMobile
+        ? Math.min(22, cardHeight * 0.14)
+        : Math.min(60, cardHeight * 0.22);
+      const rotateDeg = isMobile ? 7 : 8;
+      const dropY = isMobile ? 150 : 240;
+      const scrollDistance = isMobile ? 280 : 400;
 
       // Drop in from below, then fan open
       const spreadState = {
@@ -96,7 +104,7 @@ export default function CardStack() {
   }, []);
 
   return (
-    <section className="stack min-h-[60vh] md:min-h-[80vh] bg-transparent relative z-10">
+    <section className="stack min-h-[60vh] md:min-h-[80vh] bg-transparent relative z-10 overflow-x-clip">
       <div className="relative w-full flex justify-center pt-8 md:pt-12">
         {cards.map((card, i) => (
           <div
@@ -104,10 +112,8 @@ export default function CardStack() {
             ref={(el) => {
               if (el) cardsRef.current[i] = el;
             }}
-            className="absolute rounded-2xl backdrop-blur-xl border border-white/20"
+            className="absolute rounded-2xl backdrop-blur-xl border border-white/20 w-[clamp(84px,24vw,112px)] h-[clamp(108px,30vw,148px)] md:w-[clamp(112px,28vw,256px)] md:h-[clamp(140px,36vw,288px)]"
             style={{
-              width: "clamp(112px, 28vw, 256px)",
-              height: "clamp(140px, 36vw, 288px)",
               backgroundColor: card.color,
               backgroundImage: `url(${card.bg})`,
               backgroundRepeat: "no-repeat",

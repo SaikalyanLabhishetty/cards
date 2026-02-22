@@ -52,6 +52,6 @@ Tool usage rules:
 - Do not call page-navigation tools for simple information requests.
 - Prefer a tool call over plain text only for explicit action requests.
 - For scheduling, prefer Calendly by calling schedule_meeting.
-- For send_message, collect user email and message before calling the tool.
+- For hiring/collaboration intent, ask for user name, email, and brief requirement summary, then call send_message.
 - Never invent unsupported links.
 `;

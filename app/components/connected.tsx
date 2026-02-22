@@ -12,6 +12,18 @@ type PortfolioContactPrefill = {
   message?: string;
 };
 
+type SendMailApiResponse = {
+  ok?: boolean;
+  message?: string;
+  error?: string;
+};
+
+const INITIAL_STATUS = "Awaiting payload...";
+
+function isValidEmail(email: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
 export default function Connected() {
   const pathRef = useRef<SVGPathElement | null>(null);
   const traceLeadRef = useRef<SVGPathElement | null>(null);
@@ -30,8 +42,11 @@ export default function Connected() {
 
   const [postcardOpen, setPostcardOpen] = useState(false);
   const [closing, setClosing] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [draftEmail, setDraftEmail] = useState("");
   const [draftMessage, setDraftMessage] = useState("");
+  const [statusText, setStatusText] = useState(INITIAL_STATUS);
+  const [statusIsError, setStatusIsError] = useState(false);
 
   const openPostcard = useCallback(() => {
     if (closing) return;
@@ -41,22 +56,26 @@ export default function Connected() {
 
   const handleOpenPostcard = (event: MouseEvent<HTMLAnchorElement>) => {
     event.preventDefault();
+    setIsSubmitting(false);
+    setStatusIsError(false);
+    setStatusText(INITIAL_STATUS);
     setDraftEmail("");
     setDraftMessage("");
     openPostcard();
   };
 
-  const handleSend = (event?: FormEvent<HTMLFormElement>) => {
-    event?.preventDefault();
-    if (!postcardOpen || closing) return;
-    setClosing(true);
-
+  const runSuccessAnimation = () => {
     const overlay = overlayRef.current;
     const flap = flapRef.current;
     const letter = letterRef.current;
     const successIcon = successIconRef.current;
     const successMessage = successMessageRef.current;
-    if (!overlay || !flap || !letter || !successIcon || !successMessage) return;
+    if (!overlay || !flap || !letter || !successIcon || !successMessage) {
+      setIsSubmitting(false);
+      return;
+    }
+
+    setClosing(true);
 
     sendTlRef.current?.kill();
     sendTlRef.current = gsap.timeline({
@@ -64,6 +83,9 @@ export default function Connected() {
       onComplete: () => {
         setPostcardOpen(false);
         setClosing(false);
+        setIsSubmitting(false);
+        setStatusIsError(false);
+        setStatusText(INITIAL_STATUS);
         setDraftEmail("");
         setDraftMessage("");
       },
@@ -79,6 +101,62 @@ export default function Connected() {
       .to(overlay, { opacity: 0, duration: 0.45, ease: "power1.out" }, 0.8);
   };
 
+  const handleSend = async (event?: FormEvent<HTMLFormElement>) => {
+    event?.preventDefault();
+    if (!postcardOpen || closing || isSubmitting) return;
+
+    const email = draftEmail.trim();
+    const message = draftMessage.trim();
+
+    if (!email || !message) {
+      setStatusIsError(true);
+      setStatusText("Email and message are required.");
+      return;
+    }
+
+    if (!isValidEmail(email)) {
+      setStatusIsError(true);
+      setStatusText("Please enter a valid email address.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    setStatusIsError(false);
+    setStatusText("Transmitting payload...");
+
+    try {
+      const response = await fetch("/api/contact/send", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, message }),
+      });
+
+      let data: SendMailApiResponse = {};
+      try {
+        data = (await response.json()) as SendMailApiResponse;
+      } catch {
+        data = {};
+      }
+
+      if (!response.ok) {
+        setStatusIsError(true);
+        setStatusText(data.error || "Transmission failed. Try again.");
+        setIsSubmitting(false);
+        return;
+      }
+
+      setStatusIsError(false);
+      setStatusText(data.message || "Payload accepted. Sealing envelope...");
+      runSuccessAnimation();
+    } catch {
+      setStatusIsError(true);
+      setStatusText("Network error. Please try again.");
+      setIsSubmitting(false);
+    }
+  };
+
   useEffect(() => {
     const handler = (event: Event) => {
       const detail = (event as CustomEvent<PortfolioContactPrefill>).detail;
@@ -89,6 +167,9 @@ export default function Connected() {
       const nextMessage = typeof detail.message === "string" ? detail.message.trim() : "";
       const payload = [nextSubject, nextMessage].filter(Boolean).join("\n\n");
 
+      setIsSubmitting(false);
+      setStatusIsError(false);
+      setStatusText(INITIAL_STATUS);
       setDraftEmail(nextEmail);
       setDraftMessage(payload);
       openPostcard();
@@ -101,7 +182,7 @@ export default function Connected() {
   }, [openPostcard]);
 
   const handleClose = () => {
-    if (!postcardOpen || closing) return;
+    if (!postcardOpen || closing || isSubmitting) return;
     setClosing(true);
 
     const overlay = overlayRef.current;
@@ -122,6 +203,8 @@ export default function Connected() {
       onComplete: () => {
         setPostcardOpen(false);
         setClosing(false);
+        setStatusIsError(false);
+        setStatusText(INITIAL_STATUS);
       },
     });
 
@@ -377,7 +460,7 @@ export default function Connected() {
           INITIATE PING
         </a>
 
-        <a
+        {/* <a
           href="/resume.pdf"
           className="group flex items-center gap-2 rounded bg-orange-900/30 border border-orange-500/30 px-4 py-2 hover:bg-orange-800/50 hover:border-orange-400 shadow-[0_0_15px_rgba(249,115,22,0.15)] transition-all"
           target="_blank"
@@ -390,7 +473,7 @@ export default function Connected() {
             <path d="M8.5 16h4" strokeWidth="1.6" strokeLinecap="round" />
           </svg>
           DOWNLOAD CV
-        </a>
+        </a> */}
       </div>
 
       {postcardOpen && (
@@ -437,6 +520,7 @@ export default function Connected() {
                         type="email"
                         name="email"
                         required
+                        disabled={closing || isSubmitting}
                         value={draftEmail}
                         onChange={(event) => setDraftEmail(event.target.value)}
                         className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm shadow-inner focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-200"
@@ -449,6 +533,7 @@ export default function Connected() {
                       <textarea
                         name="message"
                         required
+                        disabled={closing || isSubmitting}
                         rows={5}
                         value={draftMessage}
                         onChange={(event) => setDraftMessage(event.target.value)}
@@ -459,17 +544,17 @@ export default function Connected() {
                   </div>
 
                   <div className="sticky bottom-0 flex items-center justify-between gap-2 text-[11px] text-cyan-200 font-mono bg-transparent pt-2 pb-1 border-t border-cyan-500/20">
-                    <span className="opacity-60">Status: Awaiting payload...</span>
+                    <span className={statusIsError ? "text-red-300" : "opacity-60"}>Status: {statusText}</span>
                     <button
                       type="submit"
-                      disabled={closing}
+                      disabled={closing || isSubmitting}
                       className="inline-flex items-center gap-2 rounded bg-cyan-500/20 border border-cyan-400 px-4 py-1.5 text-cyan-100 font-semibold shadow-[0_0_10px_rgba(6,182,212,0.3)] hover:shadow-[0_0_20px_rgba(6,182,212,0.6)] hover:bg-cyan-500/40 transition disabled:opacity-50"
                     >
                       <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="1.8" strokeLinecap="round">
                         <path d="M4 12h12" />
                         <path d="M10 6l6 6-6 6" />
                       </svg>
-                      TRANSMIT
+                      {isSubmitting ? "TRANSMITTING..." : "TRANSMIT"}
                     </button>
                   </div>
                 </form>

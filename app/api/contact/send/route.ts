@@ -14,6 +14,7 @@ type MailTransport = {
   verify: () => Promise<unknown>;
   sendMail: (mail: {
     from: string;
+    sender?: string;
     to: string;
     replyTo: string;
     subject: string;
@@ -109,14 +110,13 @@ export async function POST(request: Request) {
   const smtpPort = Number(process.env.SMTP_PORT || "587");
   const smtpUser = process.env.SMTP_USER || "";
   const smtpPass = process.env.SMTP_PASS || "";
-  const smtpFrom = process.env.SMTP_FROM_EMAIL || smtpUser;
-  const receiverEmail = process.env.CONTACT_RECEIVER_EMAIL || smtpUser;
+  const smtpSender = process.env.SMTP_FROM_EMAIL || smtpUser;
 
-  if (!smtpHost || !smtpUser || !smtpPass || !receiverEmail || Number.isNaN(smtpPort)) {
+  if (!smtpHost || !smtpUser || !smtpPass || Number.isNaN(smtpPort)) {
     return NextResponse.json(
       {
         error:
-          "Mail service is not configured. Set SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, and CONTACT_RECEIVER_EMAIL.",
+          "Mail service is not configured. Set SMTP_HOST, SMTP_PORT, SMTP_USER, and SMTP_PASS.",
       },
       { status: 500 },
     );
@@ -174,8 +174,9 @@ export async function POST(request: Request) {
 
   try {
     await transport.sendMail({
-      from: smtpFrom,
-      to: receiverEmail,
+      from: email,
+      sender: smtpSender,
+      to: smtpUser,
       replyTo: email,
       subject: normalizedSubject,
       text,
