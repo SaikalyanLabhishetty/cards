@@ -79,7 +79,7 @@ function isValidEmail(email: string) {
 
 function detectContactIntent(userQuestion: string) {
   const text = userQuestion.toLowerCase();
-  return /(hire|hiring|quote|proposal|contact|consult|consulting|project|build|work together|collaborat|pricing)/.test(
+  return /(hire|hiring|quote|proposal|contact|consult|consulting|project|build|work together|collaborat|pricing|send (a )?(mail|email|message)|email|mail)/.test(
     text,
   );
 }
@@ -96,9 +96,14 @@ function detectScheduleIntent(userQuestion: string) {
 
 function detectKnowledgeIntent(userQuestion: string) {
   const text = userQuestion.toLowerCase();
-  return /(service|services|offer|offering|project|projects|experience|skills|stack|github|about|company|process|background)/.test(
-    text,
-  );
+  const looksLikeQuestion =
+    text.includes("?") ||
+    /^(what|who|how|why|when|where|tell me|explain|share|can you)/.test(text);
+  const knowledgeTopic =
+    /(service|services|offer|offering|project|projects|experience|skills|stack|github|company|process|background)/.test(
+      text,
+    );
+  return looksLikeQuestion && knowledgeTopic;
 }
 
 function hasActionIntent(userQuestion: string, toolCall: ToolCall) {
