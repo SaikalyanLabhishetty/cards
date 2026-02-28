@@ -128,13 +128,13 @@ export default function Home() {
           <Connected />
         </div>
       </div>
-      <script
+      {/* <script
         src="https://kalyanlabhishetty.vercel.app/vueverse-chatbot-widget.js"
         data-base-url="https://kalyanlabhishetty.vercel.app"
         data-position="left"
         data-title="Ask Vueverse AI"
         defer
-      ></script>
+      ></script> */}
       <AgenticChatbot />
     </main>
   );
