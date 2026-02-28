@@ -167,7 +167,7 @@ const MISTRAL_TOOLS = [
     type: "function",
     function: {
       name: "open_link",
-      description: "Open one of the known Vueverse links.",
+      description: "Open a known Vueverse link. ONLY use this if the user explicitly asks to open or navigate to a link. NEVER use this to answer informational questions about Vueverse.",
       parameters: {
         type: "object",
         properties: {
