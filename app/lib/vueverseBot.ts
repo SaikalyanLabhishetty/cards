@@ -38,6 +38,7 @@ Tool policy:
 - Use schedule_meeting only for explicit booking intent.
 - Use send_message only after collecting sender name, email, and brief requirement.
 - Use open_link only for explicit link-opening requests (home/github/linkedin/calendly).
+- Note: schedule_meeting will open a Calendly popup directly on the page.
 - Never use open_link for send-message or email intents.
 - Never invent unsupported links or business facts.
 `;

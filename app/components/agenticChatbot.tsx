@@ -1,7 +1,16 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import Script from "next/script";
 import { PORTFOLIO_LINKS, type PortfolioLinkTarget } from "@/app/lib/portfolioAgent";
+
+declare global {
+  interface Window {
+    Calendly?: {
+      initPopupWidget: (options: { url: string }) => void;
+    };
+  }
+}
 
 type UiRole = "assistant" | "user" | "action" | "error";
 
@@ -167,6 +176,32 @@ export default function AgenticChatbot() {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, sending]);
 
+  useEffect(() => {
+    const handleCalendlyEvent = (e: MessageEvent) => {
+      // Check if it's a Calendly event
+      const eventName = e.data.event;
+      if (!eventName || !eventName.startsWith("calendly.")) return;
+
+      switch (eventName) {
+        case "calendly.event_type_viewed":
+          pushMessage("assistant", "Booking in progress... Select an event type.");
+          break;
+        case "calendly.date_and_time_selected":
+          pushMessage("assistant", "Booking in progress... Select a date and time.");
+          break;
+        case "calendly.event_scheduled":
+          pushMessage(
+            "assistant",
+            "Success! Your meeting has been scheduled. I'm still here if you have more questions."
+          );
+          break;
+      }
+    };
+
+    window.addEventListener("message", handleCalendlyEvent);
+    return () => window.removeEventListener("message", handleCalendlyEvent);
+  }, []);
+
   const pushMessage = (role: UiRole, content: string) => {
     setMessages((previous) => [...previous, { id: makeId(), role, content }]);
   };
@@ -223,8 +258,14 @@ export default function AgenticChatbot() {
           url.searchParams.set("email", email);
         }
 
+        // Use Calendly Popup Widget if available
+        if (typeof window.Calendly !== "undefined") {
+          window.Calendly.initPopupWidget({ url: url.toString() });
+          return "Opening Calendly scheduling popup...";
+        }
+
         window.open(url.toString(), "_blank", "noopener,noreferrer");
-        return "Opened Calendly scheduling page.";
+        return "Opened Calendly scheduling page in a new tab.";
       }
 
       case "send_message": {
@@ -462,6 +503,15 @@ export default function AgenticChatbot() {
           AI Assistant
         </button>
       )}
+
+      <Script
+        src="https://assets.calendly.com/assets/external/widget.js"
+        strategy="lazyOnload"
+      />
+      <link
+        href="https://assets.calendly.com/assets/external/widget.css"
+        rel="stylesheet"
+      />
 
       {open && (
         <div className="overflow-hidden rounded-2xl border border-cyan-500/30 bg-[#05070f]/95 shadow-[0_20px_60px_rgba(0,0,0,0.5)]">
