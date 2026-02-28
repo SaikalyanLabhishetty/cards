@@ -310,6 +310,7 @@ function parseUnknownJson(value: unknown): Record<string, unknown> {
 async function callGemini(
   messages: ChatMessage[],
   apiKey: string,
+  noTools = false,
 ): Promise<ProviderSuccess | ProviderFailure> {
   const contents = messages.map((message) => ({
     role: message.role === "assistant" ? "model" : "user",
@@ -328,12 +329,14 @@ async function callGemini(
           parts: [{ text: VUEVERSE_AGENT_SYSTEM_PROMPT.trim() }],
         },
         contents,
-        tools: [{ functionDeclarations: GEMINI_FUNCTION_DECLARATIONS }],
-        toolConfig: {
-          functionCallingConfig: {
-            mode: "AUTO",
+        ...(noTools ? {} : {
+          tools: [{ functionDeclarations: GEMINI_FUNCTION_DECLARATIONS }],
+          toolConfig: {
+            functionCallingConfig: {
+              mode: "AUTO",
+            },
           },
-        },
+        }),
         generationConfig: {
           temperature: 0.45,
           maxOutputTokens: 1024,
@@ -393,6 +396,7 @@ async function callGemini(
 async function callMistral(
   messages: ChatMessage[],
   apiKey: string,
+  noTools = false,
 ): Promise<ProviderSuccess | ProviderFailure> {
   const mistralMessages = [
     {
@@ -418,8 +422,10 @@ async function callMistral(
         messages: mistralMessages,
         temperature: 0.45,
         max_tokens: 1024,
-        tools: MISTRAL_TOOLS,
-        tool_choice: "auto",
+        ...(noTools ? {} : {
+          tools: MISTRAL_TOOLS,
+          tool_choice: "auto",
+        }),
       }),
     });
   } catch (error) {
@@ -512,6 +518,7 @@ export async function POST(request: Request) {
 
   const body = isRecord(payload) ? payload : {};
   const messages = normalizeMessages(body.messages);
+  const noTools = body.noTools === true;
 
   if (!messages.length) {
     return NextResponse.json(
@@ -523,7 +530,7 @@ export async function POST(request: Request) {
   let geminiFailure: ProviderFailure | null = null;
 
   if (hasGeminiKey) {
-    const geminiResult = await callGemini(messages, geminiApiKey);
+    const geminiResult = await callGemini(messages, geminiApiKey, noTools);
 
     if (geminiResult.ok) {
       if (
@@ -550,7 +557,7 @@ export async function POST(request: Request) {
   }
 
   if (hasMistralKey) {
-    const mistralResult = await callMistral(messages, mistralApiKey);
+    const mistralResult = await callMistral(messages, mistralApiKey, noTools);
 
     if (mistralResult.ok) {
       return NextResponse.json({

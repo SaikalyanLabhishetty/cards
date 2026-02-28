@@ -324,7 +324,7 @@ export default function VueverseChatbot({
     }
   };
 
-  const sendToAgent = async (question: string) => {
+  const sendToAgent = async (question: string, noTools = false) => {
     const nextConversation = [...conversationForApi, { role: "user", content: question }];
     setSending(true);
 
@@ -334,7 +334,7 @@ export default function VueverseChatbot({
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ messages: nextConversation }),
+        body: JSON.stringify({ messages: nextConversation, noTools }),
       });
 
       const data = (await response.json()) as ChatApiResponse;
@@ -457,7 +457,7 @@ export default function VueverseChatbot({
 
     const overviewPrompt = `Tell me about ${VUEVERSE_SITE_NAME}'s services, process, and technical strengths.`;
     pushMessage("user", `Learn about ${VUEVERSE_SITE_NAME}`);
-    await sendToAgent(overviewPrompt);
+    await sendToAgent(overviewPrompt, true);
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
