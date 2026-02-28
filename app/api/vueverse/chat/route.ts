@@ -88,7 +88,7 @@ type MistralResponse = {
 const GEMINI_FUNCTION_DECLARATIONS = [
   {
     name: "open_link",
-    description: "Open one of the known Vueverse links.",
+    description: "Open a known Vueverse link. ONLY use this if the user explicitly asks to open or navigate to a link. NEVER use this to answer informational questions.",
     parameters: {
       type: "OBJECT",
       properties: {
@@ -103,7 +103,7 @@ const GEMINI_FUNCTION_DECLARATIONS = [
   },
   {
     name: "schedule_meeting",
-    description: "Open the Calendly link for booking a meeting.",
+    description: "Open the Calendly link for booking a meeting. ONLY use this if the user explicitly asks to schedule or book a meeting. NEVER use this to answer informational questions.",
     parameters: {
       type: "OBJECT",
       properties: {
@@ -136,7 +136,7 @@ const GEMINI_FUNCTION_DECLARATIONS = [
   },
   {
     name: "send_message",
-    description: "Prepare a contact message for the Vueverse contact inbox.",
+    description: "Prepare a contact message for the Vueverse contact inbox. ONLY use this if the user explicitly asks to contact, hire, or send a message. NEVER use this to answer informational questions.",
     parameters: {
       type: "OBJECT",
       properties: {
@@ -185,7 +185,7 @@ const MISTRAL_TOOLS = [
     type: "function",
     function: {
       name: "schedule_meeting",
-      description: "Open the Calendly link for booking a meeting.",
+      description: "Open the Calendly link for booking a meeting. ONLY use this if the user explicitly asks to schedule or book a meeting. NEVER use this to answer informational questions.",
       parameters: {
         type: "object",
         properties: {
@@ -221,7 +221,7 @@ const MISTRAL_TOOLS = [
     type: "function",
     function: {
       name: "send_message",
-      description: "Prepare a contact message for the Vueverse contact inbox.",
+      description: "Prepare a contact message for the Vueverse contact inbox. ONLY use this if the user explicitly asks to contact, hire, or send a message. NEVER use this to answer informational questions.",
       parameters: {
         type: "object",
         properties: {
