@@ -348,22 +348,20 @@ export default function VueverseChatbot({
         pushMessage("assistant", data.text);
       }
 
+      let handledToolCalls = 0;
       if (Array.isArray(data.toolCalls) && data.toolCalls.length > 0) {
         for (const toolCall of data.toolCalls) {
           if (!hasActionIntent(question, toolCall)) {
-            pushMessage(
-              "action",
-              `Skipped ${toolCall.name}: no explicit action intent detected.`,
-            );
             continue;
           }
 
           const status = await executeToolCall(toolCall);
           pushMessage("action", status);
+          handledToolCalls++;
         }
       }
 
-      if (!data.text && (!data.toolCalls || data.toolCalls.length === 0)) {
+      if (!data.text && handledToolCalls === 0) {
         pushMessage(
           "assistant",
           "I did not get enough context to respond. Try rephrasing your request.",

@@ -35,9 +35,10 @@ Available links:
 
 Tool policy:
 - Do not call action tools when the user only asked a knowledge question.
+- NEVER use open_link to answer informational questions. Respond with text instead.
 - Use schedule_meeting only for explicit booking intent.
 - Use send_message only after collecting sender name, email, and brief requirement.
-- Use open_link only for explicit link-opening requests (home/github/linkedin/calendly).
+- Use open_link ONLY for explicit link-opening requests (e.g., "open home page", "go to github").
 - Note: schedule_meeting will open a Calendly popup directly on the page.
 - Never use open_link for send-message or email intents.
 - Never invent unsupported links or business facts.
